@@ -1,12 +1,19 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import CustomButton from '../components/CustomButton';
+import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useRef, useState } from "react";
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import CustomButton from "../../components/CustomButton";
 
 export default function OtpVerification() {
   const router = useRouter();
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const inputs = useRef<(TextInput | null)[]>([]); // ✅ Correct typing
 
   const handleChange = (text: string, index: number) => {
@@ -21,19 +28,19 @@ export default function OtpVerification() {
   };
 
   const handleVerify = () => {
-    const code = otp.join('');
+    const code = otp.join("");
     if (code.length < 4) {
-      Alert.alert('Error', 'Please enter the full 4-digit code.');
+      Alert.alert("Error", "Please enter the full 4-digit code.");
       return;
     }
-    console.log('Entered OTP:', code);
+    console.log("Entered OTP:", code);
     // TODO: Replace with real verification logic
-    router.push('/create-new-password');
+    router.push("/create-new-password");
   };
 
   const handleResend = () => {
     // TODO: Implement resend logic
-    Alert.alert('Success', 'A new verification code has been sent.');
+    Alert.alert("Success", "A new verification code has been sent.");
   };
 
   return (
@@ -69,7 +76,7 @@ export default function OtpVerification() {
             value={digit}
             onChangeText={(text) => handleChange(text, index)}
             onKeyPress={({ nativeEvent }) => {
-              if (nativeEvent.key === 'Backspace' && !digit && index > 0) {
+              if (nativeEvent.key === "Backspace" && !digit && index > 0) {
                 inputs.current[index - 1]?.focus();
               }
             }}
@@ -84,7 +91,9 @@ export default function OtpVerification() {
 
       {/* Resend Code */}
       <View style={styles.footer}>
-        <Text style={{ fontSize: 16, color: '#000' }}>Didn’t receive code? </Text>
+        <Text style={{ fontSize: 16, color: "#000" }}>
+          Didn’t receive code?{" "}
+        </Text>
         <Pressable onPress={handleResend}>
           <Text style={styles.resendText}>Resend</Text>
         </Pressable>
@@ -96,7 +105,7 @@ export default function OtpVerification() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 30,
     paddingTop: 60,
   },
@@ -105,42 +114,42 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 15,
-    color: '#000',
+    color: "#000",
   },
   subtitle: {
     fontSize: 16,
-    color: '#555',
+    color: "#555",
     marginBottom: 30,
     lineHeight: 22,
   },
   otpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 30,
   },
   otpInput: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 6,
     width: 60,
     height: 60,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 22,
-    color: '#000',
+    color: "#000",
   },
   buttonWrapper: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   footer: {
     marginTop: 40,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
   },
   resendText: {
     fontSize: 16,
-    color: '#007bff',
-    fontWeight: '500',
+    color: "#007bff",
+    fontWeight: "500",
   },
 });

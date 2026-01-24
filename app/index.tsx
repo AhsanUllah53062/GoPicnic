@@ -1,5 +1,6 @@
-import { Redirect } from 'expo-router';
+import { Redirect } from "expo-router";
 
 export default function Index() {
-  return <Redirect href="/welcome" />;
+  // ✅ Redirect to the welcome screen inside the (auth) group
+  return <Redirect href="/(auth)/welcome" />;
 }

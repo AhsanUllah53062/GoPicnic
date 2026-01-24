@@ -1,33 +1,43 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import CustomButton from '../components/CustomButton';
+import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import CustomButton from "../../components/common/Button"; // ✅ use consistent path
+import { resetPassword } from "../../services/auth"; // ✅ import Firebase service
 
 export default function ForgotPassword() {
   const router = useRouter();
   const [email, setEmail] = useState<string>("");
 
-  const handleSendCode = () => {
-  if (!email) {
-    Alert.alert("Error", "Please enter your email address.");
-    return;
-  }
+  const handleSendCode = async () => {
+    if (!email) {
+      Alert.alert("Error", "Please enter your email address.");
+      return;
+    }
 
-  // TODO: Replace with real reset logic (API call)
-  console.log("Sending reset code to:", email);
-
-  Alert.alert(
-    "Success",
-    "If this email is registered, a reset code will be sent.",
-    [
-      {
-        text: "OK",
-        onPress: () => router.push('/otp-verification'), // ✅ Navigate after pressing OK
-      },
-    ]
-  );
-};
+    try {
+      await resetPassword(email);
+      Alert.alert(
+        "Success",
+        "If this email is registered, a reset link has been sent.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.push("/login"), // ✅ navigate back to login
+          },
+        ],
+      );
+    } catch (error: any) {
+      Alert.alert("Reset failed", error.message);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -45,7 +55,7 @@ export default function ForgotPassword() {
 
       {/* Subtitle */}
       <Text style={styles.subtitle}>
-        Don't worry! It occurs. Please enter the email address linked with your account.
+        Don’t worry! Please enter the email address linked with your account.
       </Text>
 
       {/* Email Input */}
@@ -60,13 +70,13 @@ export default function ForgotPassword() {
 
       {/* Send Code Button */}
       <View style={styles.buttonWrapper}>
-        <CustomButton title="Send Code" filled onPress={handleSendCode} />
+        <CustomButton title="Send Reset Link" filled onPress={handleSendCode} />
       </View>
 
       {/* Footer: Remember password? Login */}
       <View style={styles.footer}>
-        <Text style={{ fontSize: 16, color: '#000' }}>Remember password? </Text>
-        <Pressable onPress={() => router.push('/login')}>
+        <Text style={{ fontSize: 16, color: "#000" }}>Remember password? </Text>
+        <Pressable onPress={() => router.push("/login")}>
           <Text style={styles.loginText}>Login</Text>
         </Pressable>
       </View>
@@ -77,7 +87,7 @@ export default function ForgotPassword() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 30,
     paddingTop: 60,
   },
@@ -86,36 +96,36 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 15,
-    color: '#000',
+    color: "#000",
   },
   subtitle: {
     fontSize: 16,
-    color: '#555',
+    color: "#555",
     marginBottom: 30,
     lineHeight: 22,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 6,
     padding: 12,
     fontSize: 16,
-    color: '#000',
+    color: "#000",
   },
   buttonWrapper: {
     marginTop: 30,
-    alignItems: 'center',
+    alignItems: "center",
   },
   footer: {
     marginTop: 40,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
   },
   loginText: {
     fontSize: 16,
-    color: '#007bff',
-    fontWeight: '500',
+    color: "#007bff",
+    fontWeight: "500",
   },
 });
