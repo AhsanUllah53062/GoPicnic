@@ -13,6 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "../contexts/AuthContext";
 import { CartProvider } from "../src/context/CartContext";
 import { TripProvider } from "../src/context/TripContext";
+import { UserProvider } from "../src/context/UserContext"; // <-- add this
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -23,23 +24,24 @@ export default function RootLayout() {
         <AuthProvider>
           <TripProvider>
             <CartProvider>
-              {/* Global status bar */}
-              <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+              <UserProvider>
+                {/* ✅ wrap everything in UserProvider */}
+                <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+                <ThemeProvider
+                  value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                >
+                  <Stack screenOptions={{ headerShown: false }}>
+                    {/* Auth flow screens */}
+                    <Stack.Screen name="(auth)/welcome" />
+                    <Stack.Screen name="(auth)/login" />
+                    <Stack.Screen name="(auth)/signup" />
+                    <Stack.Screen name="(auth)/forgot-password" />
 
-              <ThemeProvider
-                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-              >
-                <Stack screenOptions={{ headerShown: false }}>
-                  {/* ✅ Auth flow screens */}
-                  <Stack.Screen name="(auth)/welcome" />
-                  <Stack.Screen name="(auth)/login" />
-                  <Stack.Screen name="(auth)/signup" />
-                  <Stack.Screen name="(auth)/forgot-password" />
-
-                  {/* ✅ Main app tabs */}
-                  <Stack.Screen name="(tabs)" />
-                </Stack>
-              </ThemeProvider>
+                    {/* Main app tabs */}
+                    <Stack.Screen name="(tabs)" />
+                  </Stack>
+                </ThemeProvider>
+              </UserProvider>
             </CartProvider>
           </TripProvider>
         </AuthProvider>
