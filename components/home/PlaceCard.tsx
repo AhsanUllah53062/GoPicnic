@@ -1,15 +1,22 @@
-import { useRouter } from 'expo-router';
-import { Image, ImageSourcePropType, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRouter } from "expo-router";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 type PlaceCardProps = {
   id: string;
   name: string;
   location: string;
-  rating: number;
-  temperature: string;
-  image: ImageSourcePropType;   // local require for thumbnails
-  imageUrl?: string;            // ✅ string for background in planning
-  onStartPlanning?: () => void; // ✅ optional callback
+  rating?: number;
+  temperature?: string;
+  image?: any; // can be require() or { uri }
+  imageUrl?: string; // Firestore gallery URL
+  onStartPlanning?: () => void;
 };
 
 export default function PlaceCard({
@@ -25,9 +32,8 @@ export default function PlaceCard({
   const router = useRouter();
 
   const handlePress = () => {
-    // Navigate to place details
     router.push({
-      pathname: '/place/[id]',
+      pathname: "/place/[id]",
       params: { id },
     });
   };
@@ -35,15 +41,19 @@ export default function PlaceCard({
   return (
     <View style={styles.card}>
       <Pressable onPress={handlePress}>
-        <Image source={image} style={styles.image} />
+        <Image
+          source={image ? image : { uri: imageUrl }}
+          style={styles.image}
+        />
         <Text style={styles.name}>{name}</Text>
-        <Text style={styles.details}>
-          {location} • {temperature}
-        </Text>
-        <Text style={styles.rating}>⭐ {rating}</Text>
+        {location && (
+          <Text style={styles.details}>
+            {location} {temperature ? `• ${temperature}` : ""}
+          </Text>
+        )}
+        {rating !== undefined && <Text style={styles.rating}>⭐ {rating}</Text>}
       </Pressable>
 
-      {/* Start Planning Button */}
       {onStartPlanning && (
         <TouchableOpacity style={styles.planBtn} onPress={onStartPlanning}>
           <Text style={styles.planBtnText}>Start Planning</Text>
@@ -59,34 +69,37 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   image: {
-    width: '100%',
+    width: "100%",
     height: 100,
     borderRadius: 8,
+    backgroundColor: "#eee", // fallback background
   },
   name: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 5,
+    fontWeight: "bold",
+    marginTop: 6,
+    color: "#000",
   },
   details: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
+    marginTop: 2,
   },
   rating: {
     fontSize: 12,
-    color: '#333',
+    color: "#333",
     marginTop: 2,
   },
   planBtn: {
-    marginTop: 6,
-    backgroundColor: '#007AFF',
+    marginTop: 8,
+    backgroundColor: "#000",
     paddingVertical: 6,
     borderRadius: 6,
-    alignItems: 'center',
+    alignItems: "center",
   },
   planBtnText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

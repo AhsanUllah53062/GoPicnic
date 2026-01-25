@@ -1,71 +1,91 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { places } from '../../data/places';
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { doc, getDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { db } from "../../services/firebase";
 
-import Gallery from '../../components/Gallery';
-import LocationModal from '../../components/LocationModal';
-import ReviewsModal from '../../components/ReviewsModal';
-import TemperatureModal from '../../components/TemperatureModal';
+import Gallery from "../../components/Gallery";
+import LocationModal from "../../components/LocationModal";
+import PlaceActions from "../../components/place/PlaceActions";
+import PlaceHeader from "../../components/place/PlaceHeader";
+import PlaceInfo from "../../components/place/PlaceInfo";
+import ReviewsModal from "../../components/ReviewsModal";
 
 export default function PlaceDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const place = places.find((p) => p.id === id);
+  const [place, setPlace] = useState<any>(null);
 
-  const [showTemp, setShowTemp] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
 
-  if (!place) return <Text>Place not found</Text>;
+  useEffect(() => {
+    const fetchPlace = async () => {
+      if (!id) return;
+      const ref = doc(db, "places", id);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        setPlace({ id: snap.id, ...snap.data() });
+      }
+    };
+    fetchPlace();
+  }, [id]);
 
-  const handleGoBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)'); // fallback to your tabs root/home
-    }
-  };
+  if (!place) return <Text style={{ padding: 20 }}>Place not found</Text>;
 
   return (
     <ScrollView style={styles.container}>
-      {/* Back Arrow Icon */}
-      <MaterialIcons
-        name="arrow-back"
-        size={24}
-        color="black"
-        style={styles.backIcon}
-        onPress={handleGoBack}
+      {/* Header */}
+      <PlaceHeader
+        name={place.name}
+        city={place.city}
+        province={place.province}
+        imageUrl={place.gallery?.[0]}
+        onBack={() =>
+          router.canGoBack() ? router.back() : router.replace("/(tabs)")
+        }
       />
 
-      {/* Header Image */}
-      <Image source={place.image} style={styles.image} />
+      {/* Action Buttons */}
+      <PlaceActions
+        temperature={place.temperature}
+        rating={place.rating}
+        onTemp={() =>
+          router.push({
+            pathname: "/weather",
+            params: {
+              lat: place.latitude?.toString(),
+              lon: place.longitude?.toString(),
+              name: place.name ?? "",
+            },
+          })
+        }
+        onMap={() => setShowMap(true)}
+        onReviews={() => setShowReviews(true)}
+      />
 
-      {/* Title + Info */}
-      <Text style={styles.title}>{place.name}</Text>
-      <Text style={styles.subInfo}>{place.location}</Text>
-
-      {/* Description */}
-      <Text style={styles.description}>{place.description}</Text>
+      {/* Info Section */}
+      <PlaceInfo
+        description={place.description}
+        tags={place.tags}
+        activities={place.activities}
+      />
 
       {/* Gallery */}
-      {place.gallery && place.gallery.length > 0 && <Gallery images={place.gallery} />}
-
-      {/* Action Buttons */}
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => setShowTemp(true)}>
-          <Text>🌡️ {place.temperature}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => setShowMap(true)}>
-          <Text>📍 Location</Text>
-        </TouchableOpacity>
-        {place.reviews && place.reviews.length > 0 && (
-          <TouchableOpacity style={styles.actionBtn} onPress={() => setShowReviews(true)}>
-            <Text>⭐ {place.rating}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      {place.gallery && place.gallery.length > 0 && (
+        <View style={styles.gallerySection}>
+          <Text style={styles.sectionTitle}>Gallery</Text>
+          <Gallery
+            images={place.gallery.map((url: string) => ({ uri: url }))}
+          />
+        </View>
+      )}
 
       {/* Start Planning Button */}
       <View style={styles.buttonContainer}>
@@ -73,8 +93,11 @@ export default function PlaceDetails() {
           style={styles.primaryBtn}
           onPress={() =>
             router.push({
-              pathname: '/start-planning',
-              params: { to: place.name, toImage: place.imageUrl || '' }, // ✅ anchored planning
+              pathname: "/start-planning",
+              params: {
+                to: place.name ?? "",
+                toImage: place.gallery?.[0] ?? "",
+              },
             })
           }
         >
@@ -83,42 +106,44 @@ export default function PlaceDetails() {
       </View>
 
       {/* Modals */}
-      <TemperatureModal
-        visible={showTemp}
-        onClose={() => setShowTemp(false)}
-        temperature={place.temperature}
-      />
       <LocationModal
         visible={showMap}
         onClose={() => setShowMap(false)}
-        location={place.location}
+        placeId={place.id}
       />
-      {place.reviews && (
-        <ReviewsModal
-          visible={showReviews}
-          onClose={() => setShowReviews(false)}
-          reviews={place.reviews}
-        />
-      )}
+
+      <ReviewsModal
+        visible={showReviews}
+        onClose={() => setShowReviews(false)}
+        placeId={place.id}
+      />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
-  backIcon: { marginBottom: 16 },
-  image: { width: '100%', height: 200, borderRadius: 8, marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
-  subInfo: { fontSize: 14, color: '#666', marginBottom: 12 },
-  description: { fontSize: 16, lineHeight: 22, marginBottom: 20 },
-  actions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 },
-  actionBtn: { padding: 10, backgroundColor: '#f2f2f2', borderRadius: 8 },
-  buttonContainer: { marginTop: 10 },
-  primaryBtn: {
-    backgroundColor: '#000',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
+  container: { flex: 1, backgroundColor: "#fff" },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 12,
+    color: "#000",
+    paddingHorizontal: 16,
   },
-  primaryBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  gallerySection: {
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  buttonContainer: { marginBottom: 40, paddingHorizontal: 16 },
+  primaryBtn: {
+    backgroundColor: "#000",
+    paddingVertical: 16,
+    borderRadius: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  primaryBtnText: { color: "#fff", fontSize: 17, fontWeight: "bold" },
 });
