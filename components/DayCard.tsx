@@ -1,269 +1,446 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { MaterialIcons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import {
-  FlatList,
-  Modal,
+  ActivityIndicator,
+  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { NewExpense, useTrip } from '../src/context/TripContext';
-import PlaceRow from './PlaceRow';
-
-const mockPlaces = [
-  'Clifton, Karachi',
-  'Dolmen Mall Clifton',
-  'Port Grand Karachi',
-  'Pakistan Maritime Museum',
-];
+} from "react-native";
+import {
+  DayPlan,
+  getDayPlan,
+  PlaceVisit,
+  saveDayPlan,
+  Todo,
+} from "../services/itinerary";
+import AddPlaceModal from "./itinerary/AddPlaceModal";
+import PlaceVisitCard from "./itinerary/PlaceVisitCard";
+import TodoItem from "./itinerary/TodoItem";
 
 type Props = {
+  tripId: string;
+  cityName: string;
   dateLabel: string;
   dayIndex: number;
   date: Date;
 };
 
-export default function DayCard({ dateLabel, dayIndex, date }: Props) {
-  const { setItinerary, addExpense } = useTrip();
+export default function DayCard({
+  tripId,
+  cityName,
+  dateLabel,
+  dayIndex,
+  date,
+}: Props) {
   const [expanded, setExpanded] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [places, setPlaces] = useState<string[]>([]);
-  const [notes, setNotes] = useState<string[]>([]);
-  const [todos, setTodos] = useState<{ text: string; done: boolean }[]>([]);
-  const [expenseAmount, setExpenseAmount] = useState('');
-  const [expenseCategory, setExpenseCategory] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // 🔑 Sync local changes into TripContext
-  const syncToContext = () => {
-    const updatedDay = { dayIndex, date, places, notes, todos };
-    setItinerary(prev => {
-      const others = prev.filter(d => d.dayIndex !== dayIndex);
-      return [...others, updatedDay];
-    });
+  // Day plan data
+  const [dayPlanId, setDayPlanId] = useState<string | undefined>();
+  const [notes, setNotes] = useState<string[]>([]);
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [places, setPlaces] = useState<PlaceVisit[]>([]);
+
+  // UI states
+  const [showAddPlaceModal, setShowAddPlaceModal] = useState(false);
+  const [editingNoteIndex, setEditingNoteIndex] = useState<number | null>(null);
+
+  // Load day plan from Firestore
+  useEffect(() => {
+    if (expanded && !dayPlanId) {
+      loadDayPlan();
+    }
+  }, [expanded]);
+
+  const loadDayPlan = async () => {
+    setLoading(true);
+    try {
+      console.log(`📥 Loading day plan for day ${dayIndex}`);
+      const existingPlan = await getDayPlan(tripId, dayIndex);
+
+      if (existingPlan) {
+        setDayPlanId(existingPlan.id);
+        setNotes(existingPlan.notes);
+        setTodos(existingPlan.todos);
+        setPlaces(existingPlan.places);
+        console.log(
+          `✅ Loaded existing plan with ${existingPlan.places.length} places`,
+        );
+      } else {
+        console.log(`📝 No existing plan found, starting fresh`);
+      }
+    } catch (error: any) {
+      console.error("❌ Error loading day plan:", error);
+      Alert.alert("Error", "Failed to load day plan");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const addPlaceWithExpense = (place: string) => {
-    setPlaces([...places, place]);
-    syncToContext();
+  const saveChanges = async () => {
+    setSaving(true);
+    try {
+      console.log(`💾 Saving day plan for day ${dayIndex}`);
 
-    if (expenseAmount.trim()) {
-      const newExpense: NewExpense = {
-        amount: expenseAmount,
-        currency: 'PKR',
-        category: expenseCategory || 'General',
-        categoryIcon: 'attach-money',
-        paidBy: 'You',
-        split: 'Equal',
-        date: date.toDateString(),
-        description: `Expense for ${place}`,
+      const dayPlan: DayPlan = {
+        id: dayPlanId,
+        tripId,
+        dayIndex,
+        date,
+        notes,
+        todos,
+        places,
       };
-      addExpense(newExpense); // ✅ context generates id
-    }
 
-    // reset
-    setExpenseAmount('');
-    setExpenseCategory('');
-    setShowModal(false);
+      const savedId = await saveDayPlan(dayPlan);
+      setDayPlanId(savedId);
+      console.log(`✅ Day plan saved successfully`);
+    } catch (error: any) {
+      console.error("❌ Error saving day plan:", error);
+      Alert.alert("Error", "Failed to save changes");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Auto-save on changes (debounced)
+  useEffect(() => {
+    if (
+      !dayPlanId &&
+      (notes.length > 0 || todos.length > 0 || places.length > 0)
+    ) {
+      // First save
+      saveChanges();
+    } else if (dayPlanId) {
+      // Subsequent saves - debounce
+      const timer = setTimeout(() => {
+        saveChanges();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [notes, todos, places]);
+
+  const addNote = () => {
+    setNotes([...notes, ""]);
+    setEditingNoteIndex(notes.length);
+  };
+
+  const updateNote = (index: number, text: string) => {
+    const updated = [...notes];
+    updated[index] = text;
+    setNotes(updated);
+  };
+
+  const deleteNote = (index: number) => {
+    const updated = notes.filter((_, i) => i !== index);
+    setNotes(updated);
+  };
+
+  const addTodo = () => {
+    const newTodo: Todo = {
+      id: Date.now().toString(),
+      text: "",
+      done: false,
+      createdAt: new Date(),
+    };
+    setTodos([...todos, newTodo]);
+  };
+
+  const updateTodo = (id: string, updates: Partial<Todo>) => {
+    const updated = todos.map((todo) =>
+      todo.id === id ? { ...todo, ...updates } : todo,
+    );
+    setTodos(updated);
+  };
+
+  const deleteTodo = (id: string) => {
+    const updated = todos.filter((todo) => todo.id !== id);
+    setTodos(updated);
+  };
+
+  const handleAddPlace = (place: PlaceVisit) => {
+    console.log(`➕ Adding place: ${place.placeName}`);
+    setPlaces([...places, place]);
+    setShowAddPlaceModal(false);
+  };
+
+  const handleDeletePlace = (placeId: string) => {
+    Alert.alert("Delete Place", "Are you sure you want to remove this place?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          const updated = places.filter((p) => p.id !== placeId);
+          setPlaces(updated);
+        },
+      },
+    ]);
   };
 
   return (
     <View style={styles.card}>
-      <TouchableOpacity style={styles.headerRow} onPress={() => setExpanded(!expanded)}>
-        <Text style={styles.dateText}>{dateLabel}</Text>
-        <MaterialIcons name={expanded ? 'expand-less' : 'expand-more'} size={22} color="#000" />
+      {/* Header */}
+      <TouchableOpacity
+        style={styles.headerRow}
+        onPress={() => setExpanded(!expanded)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.headerLeft}>
+          <Text style={styles.dateText}>{dateLabel}</Text>
+          {places.length > 0 && (
+            <View style={styles.badge}>
+              <MaterialIcons name="place" size={14} color="#007AFF" />
+              <Text style={styles.badgeText}>{places.length}</Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.headerRight}>
+          {saving && (
+            <ActivityIndicator
+              size="small"
+              color="#007AFF"
+              style={styles.savingIndicator}
+            />
+          )}
+          <MaterialIcons
+            name={expanded ? "expand-less" : "expand-more"}
+            size={24}
+            color="#8E8E93"
+          />
+        </View>
       </TouchableOpacity>
 
+      {/* Expanded Content */}
       {expanded && (
-        <View style={styles.details}>
-          {/* Notes */}
-          {notes.map((note, i) => (
-            <View key={i} style={styles.noteRow}>
-              <TextInput
-                style={styles.notesField}
-                placeholder="Write notes..."
-                value={note}
-                onChangeText={(text) => {
-                  const updated = [...notes];
-                  updated[i] = text;
-                  setNotes(updated);
-                  syncToContext();
-                }}
-                multiline
-              />
-              <TouchableOpacity onPress={() => {
-                const updated = notes.filter((_, idx) => idx !== i);
-                setNotes(updated);
-                syncToContext();
-              }}>
-                <MaterialIcons name="delete" size={22} color="#000" />
-              </TouchableOpacity>
+        <View style={styles.content}>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#007AFF" />
+              <Text style={styles.loadingText}>Loading day plan...</Text>
             </View>
-          ))}
+          ) : (
+            <>
+              {/* Places */}
+              {places.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Places to Visit</Text>
+                  {places.map((place) => (
+                    <PlaceVisitCard
+                      key={place.id}
+                      place={place}
+                      onDelete={() => handleDeletePlace(place.id)}
+                    />
+                  ))}
+                </View>
+              )}
 
-          {/* Add Place */}
-          <TouchableOpacity style={styles.addBtn} onPress={() => setShowModal(true)}>
-            <MaterialIcons name="add-location" size={20} color="#fff" />
-            <Text style={styles.addBtnText}>Add a place</Text>
-          </TouchableOpacity>
-
-          {places.map((p, i) => (
-            <PlaceRow key={i} name={p} />
-          ))}
-
-          {/* Actions */}
-          <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.iconBtn} onPress={() => {
-              setNotes([...notes, '']);
-              syncToContext();
-            }}>
-              <MaterialIcons name="note-add" size={22} color="#000" />
-              <Text style={styles.iconLabel}>Notes</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.iconBtn} onPress={() => {
-              if (todos.length === 0 || todos[todos.length - 1].text.trim() !== '') {
-                setTodos([...todos, { text: '', done: false }]);
-                syncToContext();
-              }
-            }}>
-              <MaterialIcons name="checklist" size={22} color="#000" />
-              <Text style={styles.iconLabel}>Todo</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Todos */}
-          {todos.map((t, i) => (
-            <View key={i} style={styles.todoRow}>
-              <TouchableOpacity onPress={() => {
-                const updated = [...todos];
-                updated[i].done = !updated[i].done;
-                setTodos(updated);
-                syncToContext();
-              }}>
-                <MaterialIcons
-                  name={t.done ? 'check-box' : 'check-box-outline-blank'}
-                  size={20}
-                  color="#000"
-                />
+              {/* Add Place Button */}
+              <TouchableOpacity
+                style={styles.addPlaceBtn}
+                onPress={() => setShowAddPlaceModal(true)}
+              >
+                <MaterialIcons name="add-location" size={20} color="#fff" />
+                <Text style={styles.addPlaceBtnText}>Add a Place</Text>
               </TouchableOpacity>
-              <TextInput
-                style={[
-                  styles.todoText,
-                  t.done && { textDecorationLine: 'line-through', color: '#888' },
-                ]}
-                placeholder="Enter item..."
-                value={t.text}
-                onChangeText={(text) => {
-                  const updated = [...todos];
-                  updated[i].text = text;
-                  setTodos(updated);
-                  syncToContext();
-                }}
-              />
-              <TouchableOpacity onPress={() => {
-                const updated = todos.filter((_, idx) => idx !== i);
-                setTodos(updated);
-                syncToContext();
-              }}>
-                <MaterialIcons name="delete" size={20} color="#000" />
-              </TouchableOpacity>
-            </View>
-          ))}
+
+              {/* Notes */}
+              {notes.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Notes</Text>
+                  {notes.map((note, index) => (
+                    <View key={index} style={styles.noteRow}>
+                      <TextInput
+                        style={styles.noteInput}
+                        placeholder="Write your notes..."
+                        placeholderTextColor="#C7C7CC"
+                        value={note}
+                        onChangeText={(text) => updateNote(index, text)}
+                        multiline
+                        autoFocus={index === editingNoteIndex}
+                      />
+                      <TouchableOpacity onPress={() => deleteNote(index)}>
+                        <MaterialIcons name="close" size={20} color="#FF3B30" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Todos */}
+              {todos.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>To-Do List</Text>
+                  {todos.map((todo) => (
+                    <TodoItem
+                      key={todo.id}
+                      todo={todo}
+                      onUpdate={(updates) => updateTodo(todo.id, updates)}
+                      onDelete={() => deleteTodo(todo.id)}
+                    />
+                  ))}
+                </View>
+              )}
+
+              {/* Action Buttons */}
+              <View style={styles.actionsRow}>
+                <TouchableOpacity style={styles.actionBtn} onPress={addNote}>
+                  <MaterialIcons name="note-add" size={22} color="#007AFF" />
+                  <Text style={styles.actionBtnText}>Add Note</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.actionBtn} onPress={addTodo}>
+                  <MaterialIcons name="checklist" size={22} color="#007AFF" />
+                  <Text style={styles.actionBtnText}>Add To-Do</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </View>
       )}
 
-      {/* Modal for mock places + expense */}
-      <Modal visible={showModal} animationType="slide">
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Select a place & expense</Text>
-          <FlatList
-            data={mockPlaces}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity style={styles.modalItem} onPress={() => addPlaceWithExpense(item)}>
-                <Text style={styles.modalItemText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-
-          <TextInput
-            style={styles.notesField}
-            placeholder="Expense Amount"
-            keyboardType="numeric"
-            value={expenseAmount}
-            onChangeText={setExpenseAmount}
-          />
-          <TextInput
-            style={styles.notesField}
-            placeholder="Expense Category"
-            value={expenseCategory}
-            onChangeText={setExpenseCategory}
-          />
-
-          <TouchableOpacity style={styles.closeBtn} onPress={() => setShowModal(false)}>
-            <Text style={styles.closeText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
+      {/* Add Place Modal */}
+      <AddPlaceModal
+        visible={showAddPlaceModal}
+        cityName={cityName}
+        onClose={() => setShowAddPlaceModal(false)}
+        onAddPlace={handleAddPlace}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 14,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#eee',
-    shadowColor: '#000',
+    borderColor: "#E5E5EA",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  dateText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
-  details: { marginTop: 10 },
-  noteRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  notesField: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 10,
-    fontSize: 14,
-    color: '#000',
-    marginBottom: 10,
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
   },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#000',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 6,
-    marginTop: 10,
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  dateText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+  },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0F8FF",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#007AFF",
+  },
+  savingIndicator: {
+    marginRight: 4,
+  },
+  content: {
+    padding: 16,
+    paddingTop: 0,
+    borderTopWidth: 1,
+    borderTopColor: "#F2F2F7",
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#8E8E93",
+  },
+  section: {
     marginBottom: 20,
   },
-  addBtnText: { color: '#fff', fontSize: 14, fontWeight: 'bold', marginLeft: 8 },
-  actionsRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
-  iconBtn: { flexDirection: 'row', alignItems: 'center' },
-  iconLabel: { marginLeft: 6, fontSize: 14, color: '#000' },
-  todoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-    todoText: { flex: 1, fontSize: 14, color: '#000', marginLeft: 8 },
-  modalContainer: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
-  modalItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  modalItemText: { fontSize: 14, color: '#000' },
-  closeBtn: {
-    marginTop: 20,
-    backgroundColor: '#000',
-    paddingVertical: 10,
-    borderRadius: 6,
-    alignItems: 'center',
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#8E8E93",
+    marginBottom: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  closeText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+  addPlaceBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#007AFF",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 20,
+    gap: 8,
+  },
+  addPlaceBtnText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  noteRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    marginBottom: 8,
+  },
+  noteInput: {
+    flex: 1,
+    backgroundColor: "#F2F2F7",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 15,
+    color: "#000",
+    minHeight: 44,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 8,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F0F8FF",
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 6,
+  },
+  actionBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#007AFF",
+  },
 });

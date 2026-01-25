@@ -1,393 +1,505 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { useState } from 'react';
+import { MaterialIcons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
-  Modal,
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { useTrip } from '../../src/context/TripContext';
-import CarpoolPlaceCard from '../CarpoolPlaceCard';
+} from "react-native";
+import {
+  Carpool,
+  createCarpool,
+  CreateCarpoolData,
+  deleteCarpool,
+  getTripCarpools,
+  updateCarpool,
+} from "../../services/carpool";
+import { Trip } from "../../services/trips";
+import CarpoolCard from "../carpool/CarpoolCard";
+import CarpoolEditorModal from "../carpool/CarpoolEditorModal";
 
-export default function CarpoolTab() {
-  const { carpools, setCarpools } = useTrip();
+type Props = {
+  tripId: string;
+  trip: Trip;
+  userId: string;
+};
 
-  const [driverName, setDriverName] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
-  const [seats, setSeats] = useState('');
-  const [date, setDate] = useState<Date | null>(null);
-  const [time, setTime] = useState<Date | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [meetingPoint, setMeetingPoint] = useState('');
-  const [showMeetingModal, setShowMeetingModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [carModel, setCarModel] = useState('');
-  const [charge, setCharge] = useState('');
-  const [note, setNote] = useState('');
-  const [showForm, setShowForm] = useState(false); // ✅ default false
+export default function CarpoolTab({ tripId, trip, userId }: Props) {
+  const [carpools, setCarpools] = useState<Carpool[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showEditorModal, setShowEditorModal] = useState(false);
+  const [editingCarpool, setEditingCarpool] = useState<Carpool | null>(null);
+  const [hasDecided, setHasDecided] = useState(false);
+  const [wantsCarpool, setWantsCarpool] = useState(false);
 
-  const mockLocations = [
-    'University Gate',
-    'Mall Entrance',
-    'Bus Stop',
-    'Main Square',
-    'City Center',
-  ];
+  useEffect(() => {
+    loadCarpools();
+  }, [tripId]);
 
-  const validateAndSave = () => {
-    if (!driverName.trim()) return Alert.alert('Validation', 'Driver name is required');
-    if (!contactNumber.trim()) return Alert.alert('Validation', 'Contact number is required');
-    if (!seats || parseInt(seats) <= 0) return Alert.alert('Validation', 'Seats must be > 0');
-    if (!date || !time) return Alert.alert('Validation', 'Date and time are required');
-    if (!meetingPoint.trim()) return Alert.alert('Validation', 'Meeting point is required');
-    if (!carModel.trim()) return Alert.alert('Validation', 'Car model is required');
-    if (!charge || parseFloat(charge) <= 0) return Alert.alert('Validation', 'Charge must be > 0');
+  const loadCarpools = async () => {
+    setLoading(true);
+    try {
+      console.log("📥 Loading carpools for trip:", tripId);
+      const carpoolsList = await getTripCarpools(tripId);
+      setCarpools(carpoolsList);
 
-    const carpoolObj = {
-      id: Date.now().toString(),
-      driverName,
-      contactNumber,
-      seats: parseInt(seats),
-      departure: `${date.toLocaleDateString()} ${time.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      })}`,
-      meetingPoint,
-      carModel,
-      charge: parseFloat(charge),
-      note,
-    };
+      // If carpools exist, user has decided
+      if (carpoolsList.length > 0) {
+        setHasDecided(true);
+        setWantsCarpool(true);
+      }
 
-    setCarpools(prev => [...prev, carpoolObj]);
-    setShowForm(false);
-    Alert.alert('Success', 'Carpool created successfully!');
+      console.log(`✅ Loaded ${carpoolsList.length} carpools`);
+    } catch (error: any) {
+      console.error("❌ Error loading carpools:", error);
+      Alert.alert("Error", "Failed to load carpools");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const resetForm = () => {
-    setDriverName('');
-    setContactNumber('');
-    setSeats('');
-    setDate(null);
-    setTime(null);
-    setMeetingPoint('');
-    setCarModel('');
-    setCharge('');
-    setNote('');
+  const handleCreateCarpool = async (carpoolData: CreateCarpoolData) => {
+    try {
+      console.log("➕ Creating new carpool");
+      await createCarpool(carpoolData);
+      setShowEditorModal(false);
+      await loadCarpools();
+      Alert.alert("Success", "Carpool created successfully");
+    } catch (error: any) {
+      console.error("❌ Error creating carpool:", error);
+      Alert.alert("Error", "Failed to create carpool");
+    }
   };
 
-  const handleCreateNew = () => {
-    resetForm();
-    setShowForm(true);
+  const handleUpdateCarpool = async (carpoolData: CreateCarpoolData) => {
+    if (!editingCarpool?.id) return;
+
+    try {
+      console.log("✏️ Updating carpool");
+      await updateCarpool(tripId, editingCarpool.id, carpoolData);
+      setEditingCarpool(null);
+      setShowEditorModal(false);
+      await loadCarpools();
+      Alert.alert("Success", "Carpool updated successfully");
+    } catch (error: any) {
+      console.error("❌ Error updating carpool:", error);
+      Alert.alert("Error", "Failed to update carpool");
+    }
   };
 
-  const handleEditCard = (carpool: any) => {
-    // preload values for editing
-    setDriverName(carpool.driverName);
-    setContactNumber(carpool.contactNumber);
-    setSeats(carpool.seats.toString());
-    setDate(new Date(carpool.departure.split(' ')[0]));
-    setTime(new Date());
-    setMeetingPoint(carpool.meetingPoint);
-    setCarModel(carpool.carModel);
-    setCharge(carpool.charge.toString());
-    setNote(carpool.note);
-    setShowForm(true);
+  const handleDeleteCarpool = async (carpoolId: string) => {
+    try {
+      console.log("🗑️ Deleting carpool:", carpoolId);
+      await deleteCarpool(tripId, carpoolId);
+      await loadCarpools();
+    } catch (error: any) {
+      console.error("❌ Error deleting carpool:", error);
+      Alert.alert("Error", "Failed to delete carpool");
+    }
   };
 
-  const filteredLocations = mockLocations.filter(loc =>
-    loc.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleDecision = (wants: boolean) => {
+    setHasDecided(true);
+    setWantsCarpool(wants);
+    if (wants) {
+      setShowEditorModal(true);
+    }
+  };
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      {showForm ? (
-        <>
-          <Text style={styles.heading}>Create Carpool</Text>
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6366F1" />
+        <Text style={styles.loadingText}>Loading carpools...</Text>
+      </View>
+    );
+  }
 
-          {/* Driver Name */}
-          <View style={styles.inputRow}>
-            <MaterialIcons name="person" size={22} color="#000" style={styles.icon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Driver Name"
-              value={driverName}
-              onChangeText={setDriverName}
-            />
+  // Decision Screen
+  if (!hasDecided) {
+    return (
+      <View style={styles.decisionContainer}>
+        <View style={styles.decisionCard}>
+          <View style={styles.decisionIcon}>
+            <MaterialIcons name="directions-car" size={48} color="#6366F1" />
           </View>
 
-          {/* Contact Number */}
-          <View style={styles.inputRow}>
-            <MaterialIcons name="phone" size={22} color="#000" style={styles.icon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Contact Number"
-              keyboardType="phone-pad"
-              value={contactNumber}
-              onChangeText={setContactNumber}
-            />
-          </View>
-
-          {/* Seats */}
-          <View style={styles.inputRow}>
-            <MaterialIcons name="event-seat" size={22} color="#000" style={styles.icon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Available Seats"
-              keyboardType="numeric"
-              value={seats}
-              onChangeText={setSeats}
-            />
-          </View>
-
-          {/* Date */}
-          <TouchableOpacity style={styles.inputRow} onPress={() => setShowDatePicker(true)}>
-            <MaterialIcons name="calendar-today" size={22} color="#000" style={styles.icon} />
-            <Text style={styles.inputText}>
-              {date ? date.toLocaleDateString() : 'Select Date'}
-            </Text>
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={date || new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                if (event.type === 'set' && selectedDate) setDate(selectedDate);
-                setShowDatePicker(false);
-              }}
-            />
-          )}
-
-          {/* Time */}
-          <TouchableOpacity style={styles.inputRow} onPress={() => setShowTimePicker(true)}>
-            <MaterialIcons name="access-time" size={22} color="#000" style={styles.icon} />
-            <Text style={styles.inputText}>
-              {time
-                ? time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                : 'Select Time'}
-            </Text>
-          </TouchableOpacity>
-          {showTimePicker && (
-            <DateTimePicker
-              value={time || new Date()}
-              mode="time"
-              display="default"
-              onChange={(event, selectedTime) => {
-                if (event.type === 'set' && selectedTime) setTime(selectedTime);
-                setShowTimePicker(false);
-              }}
-            />
-          )}
-
-          {/* Meeting Point */}
-          <TouchableOpacity style={styles.inputRow} onPress={() => setShowMeetingModal(true)}>
-            <MaterialIcons name="place" size={22} color="#000" style={styles.icon} />
-            <Text style={styles.inputText}>
-              {meetingPoint || 'Select Meeting Point'}
-            </Text>
-          </TouchableOpacity>
-
-          <Modal visible={showMeetingModal} transparent animationType="slide">
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Search Meeting Point</Text>
-                <TextInput
-                  style={styles.inputField}
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-                {filteredLocations.map(loc => (
-                  <TouchableOpacity
-                    key={loc}
-                    style={styles.modalOption}
-                    onPress={() => {
-                      setMeetingPoint(loc);
-                      setShowMeetingModal(false);
-                      setSearchQuery('');
-                    }}
-                  >
-                    <Text style={styles.modalOptionText}>{loc}</Text>
-                  </TouchableOpacity>
-                ))}
-                <TouchableOpacity style={styles.modalBtn} onPress={() => setShowMeetingModal(false)}>
-                  <Text style={styles.modalBtnText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-
-          {/* Car Model */}
-          <View style={styles.inputRow}>
-            <MaterialIcons name="directions-car" size={22} color="#000" style={styles.icon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Car Model"
-              value={carModel}
-              onChangeText={setCarModel}
-            />
-          </View>
-
-          {/* Charge */}
-          <View style={styles.inputRow}>
-            <MaterialIcons name="attach-money" size={22} color="#000" style={styles.icon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Charge per Person"
-              keyboardType="numeric"
-              value={charge}
-              onChangeText={setCharge}
-            />
-          </View>
-
-                    {/* Note */}
-          <View style={styles.inputRow}>
-            <MaterialIcons name="note" size={22} color="#000" style={styles.icon} />
-            <TextInput
-              style={[styles.input, { height: 80 }]}
-              placeholder="Leave a Note"
-              multiline
-              value={note}
-              onChangeText={setNote}
-            />
-          </View>
-
-          {/* Save Button */}
-          <TouchableOpacity style={styles.saveBtn} onPress={validateAndSave}>
-            <Text style={styles.saveBtnText}>Save</Text>
-          </TouchableOpacity>
-        </>
-      ) : carpools.length === 0 ? (
-        // ✅ Empty state if no carpools exist
-        <View style={{ alignItems: 'center', marginTop: 40 }}>
-          <Text style={{ fontSize: 16, color: '#555', marginBottom: 20 }}>
-            No carpool created yet. You can add one anytime.
+          <Text style={styles.decisionTitle}>Carpool for your trip?</Text>
+          <Text style={styles.decisionSubtitle}>
+            Share rides with other travelers to save costs and reduce your
+            carbon footprint
           </Text>
-          <TouchableOpacity style={styles.newBtn} onPress={handleCreateNew}>
-            <Text style={styles.newBtnText}>Create Carpool</Text>
-          </TouchableOpacity>
+
+          <View style={styles.benefitsContainer}>
+            <View style={styles.benefitRow}>
+              <MaterialIcons name="savings" size={20} color="#10B981" />
+              <Text style={styles.benefitText}>Save money on fuel</Text>
+            </View>
+            <View style={styles.benefitRow}>
+              <MaterialIcons name="eco" size={20} color="#10B981" />
+              <Text style={styles.benefitText}>Reduce carbon emissions</Text>
+            </View>
+            <View style={styles.benefitRow}>
+              <MaterialIcons name="group" size={20} color="#10B981" />
+              <Text style={styles.benefitText}>Meet fellow travelers</Text>
+            </View>
+          </View>
+
+          <View style={styles.decisionButtons}>
+            <TouchableOpacity
+              style={styles.decisionButtonPrimary}
+              onPress={() => handleDecision(true)}
+            >
+              <MaterialIcons name="check" size={20} color="#fff" />
+              <Text style={styles.decisionButtonTextPrimary}>
+                Yes, Create Carpool
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.decisionButtonSecondary}
+              onPress={() => handleDecision(false)}
+            >
+              <Text style={styles.decisionButtonTextSecondary}>
+                No, Maybe Later
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // No Carpool Selected
+  if (!wantsCarpool) {
+    return (
+      <View style={styles.emptyContainer}>
+        <View style={styles.emptyIcon}>
+          <MaterialIcons
+            name="directions-car-filled"
+            size={48}
+            color="#D1D5DB"
+          />
+        </View>
+        <Text style={styles.emptyTitle}>No carpool planned</Text>
+        <Text style={styles.emptySubtitle}>
+          You chose not to organize a carpool for this trip
+        </Text>
+        <TouchableOpacity
+          style={styles.changeDecisionButton}
+          onPress={() => {
+            setHasDecided(false);
+            setWantsCarpool(false);
+          }}
+        >
+          <Text style={styles.changeDecisionText}>Change Decision</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Carpools List
+  return (
+    <View style={styles.container}>
+      {/* Header Stats */}
+      <View style={styles.statsCard}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{carpools.length}</Text>
+          <Text style={styles.statLabel}>
+            {carpools.length === 1 ? "Carpool" : "Carpools"}
+          </Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>
+            {carpools.reduce((sum, c) => sum + c.availableSeats, 0)}
+          </Text>
+          <Text style={styles.statLabel}>Seats Available</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>
+            {carpools.filter((c) => c.status === "active").length}
+          </Text>
+          <Text style={styles.statLabel}>Active</Text>
+        </View>
+      </View>
+
+      {/* Carpools List */}
+      {carpools.length === 0 ? (
+        <View style={styles.emptyListContainer}>
+          <View style={styles.emptyListIcon}>
+            <MaterialIcons name="directions-car" size={48} color="#9CA3AF" />
+          </View>
+          <Text style={styles.emptyListTitle}>No carpools yet</Text>
+          <Text style={styles.emptyListSubtitle}>
+            Create your first carpool to get started
+          </Text>
         </View>
       ) : (
-        <>
-          {/* Create New Carpool Button */}
-          <TouchableOpacity style={styles.newBtn} onPress={handleCreateNew}>
-            <Text style={styles.newBtnText}>Create New Carpool</Text>
-          </TouchableOpacity>
-
-          {/* Show Saved Carpools */}
-          {carpools.map(c => (
-            <CarpoolPlaceCard key={c.id} carpool={c} onPress={() => handleEditCard(c)} />
-          ))}
-        </>
+        <FlatList
+          data={carpools}
+          keyExtractor={(item) => item.id!}
+          renderItem={({ item }) => (
+            <CarpoolCard
+              carpool={item}
+              onEdit={() => {
+                setEditingCarpool(item);
+                setShowEditorModal(true);
+              }}
+              onDelete={() => handleDeleteCarpool(item.id!)}
+            />
+          )}
+          contentContainerStyle={styles.carpoolsList}
+          showsVerticalScrollIndicator={false}
+        />
       )}
-    </ScrollView>
+
+      {/* Floating Add Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => {
+          setEditingCarpool(null);
+          setShowEditorModal(true);
+        }}
+      >
+        <MaterialIcons name="add" size={28} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Carpool Editor Modal */}
+      <CarpoolEditorModal
+        visible={showEditorModal}
+        tripId={tripId}
+        userId={userId}
+        carpool={editingCarpool}
+        onClose={() => {
+          setShowEditorModal(false);
+          setEditingCarpool(null);
+        }}
+        onSave={editingCarpool ? handleUpdateCarpool : handleCreateCarpool}
+      />
+    </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
-    padding: 20,
+    backgroundColor: "#F9FAFB",
   },
-  heading: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#222',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  icon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 16, color: '#000' },
-  inputText: { flex: 1, fontSize: 16, color: '#555' },
-  inputField: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#000',
-    marginBottom: 18,
-  },
-  saveBtn: {
-    backgroundColor: '#000', // default black
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  saveBtnText: { color: '#fff', fontSize: 17, fontWeight: '600' },
-  newBtn: {
-    backgroundColor: '#000', // default black
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  newBtnText: { color: '#fff', fontSize: 17, fontWeight: '600' },
-  modalOverlay: {
+  loadingContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
   },
-  modalContent: {
-    backgroundColor: '#fff',
-    width: '85%',
-    borderRadius: 14,
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  decisionContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
     padding: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
+  },
+  decisionCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 32,
+    alignItems: "center",
+    maxWidth: 400,
+    width: "100%",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
     elevation: 5,
   },
-  modalTitle: {
+  decisionIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#EEF2FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  decisionTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  decisionSubtitle: {
+    fontSize: 15,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  benefitsContainer: {
+    width: "100%",
+    gap: 12,
+    marginBottom: 32,
+  },
+  benefitRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  benefitText: {
+    fontSize: 15,
+    color: "#374151",
+    fontWeight: "500",
+  },
+  decisionButtons: {
+    width: "100%",
+    gap: 12,
+  },
+  decisionButtonPrimary: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#6366F1",
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  decisionButtonTextPrimary: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+  },
+  decisionButtonSecondary: {
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  decisionButtonTextSecondary: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    padding: 40,
+  },
+  emptyIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  emptyTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 16,
-    color: '#222',
-    textAlign: 'center',
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 8,
   },
-  modalOption: {
+  emptySubtitle: {
+    fontSize: 15,
+    color: "#9CA3AF",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  changeDecisionButton: {
+    paddingHorizontal: 24,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    backgroundColor: "#6366F1",
+    borderRadius: 10,
   },
-  modalOptionText: { fontSize: 16, color: '#333' },
-  modalBtn: { marginTop: 16, alignSelf: 'flex-end' },
-  modalBtnText: { fontSize: 15, color: '#007AFF', fontWeight: '500' },
+  changeDecisionText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#fff",
+  },
+  statsCard: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    margin: 16,
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: "#E5E7EB",
+  },
+  emptyListContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+  },
+  emptyListIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  emptyListTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 8,
+  },
+  emptyListSubtitle: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+  },
+  carpoolsList: {
+    padding: 16,
+    paddingBottom: 100,
+  },
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#6366F1",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#6366F1",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
 });

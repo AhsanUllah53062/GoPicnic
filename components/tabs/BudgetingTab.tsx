@@ -1,131 +1,370 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { MaterialIcons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import {
-  FlatList,
+  ActivityIndicator,
+  Alert,
   Modal,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { NewExpense, useTrip } from '../../src/context/TripContext';
-import ExpenseEditorBottomSheet from '../ExpenseEditorBottomSheet';
+} from "react-native";
+import {
+  addExpense,
+  calculateTotalSpent,
+  CreateExpenseData,
+  deleteExpense,
+  Expense,
+  getExpensesByCategory,
+  getTripExpenses,
+  updateExpense,
+} from "../../services/expenses";
+import { Trip, updateTrip } from "../../services/trips";
+import ExpenseCard from "../budget/ExpenseCard";
+import ExpenseEditorModal from "../budget/ExpenseEditorModal";
 
-export default function BudgetingTab() {
-  const { budget, setBudget, expenses, addExpense, setExpenses } = useTrip();
+type Props = {
+  tripId: string;
+  trip: Trip;
+};
 
+export default function BudgetingTab({ tripId, trip }: Props) {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
-  const [tempBudget, setTempBudget] = useState('');
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [tempBudget, setTempBudget] = useState("");
 
-  // ✅ Use budget.spent directly from context
-  const spentPercent = budget.total > 0 ? (budget.spent / budget.total) * 100 : 0;
-  const progressWidth = Math.min(spentPercent, 100);
-  const progressColor = spentPercent <= 100 ? '#007AFF' : '#FF3B30';
+  useEffect(() => {
+    loadExpenses();
+  }, [tripId]);
 
-  const deleteExpense = (id: string) =>
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
-
-  const saveBudget = () => {
-    if (tempBudget.trim()) {
-      const newTotal = parseFloat(tempBudget);
-      if (!isNaN(newTotal)) {
-        setBudget((prev) => ({ ...prev, total: newTotal })); // only update total
-      }
+  const loadExpenses = async () => {
+    setLoading(true);
+    try {
+      const expensesList = await getTripExpenses(tripId);
+      setExpenses(expensesList);
+    } catch (error: any) {
+      Alert.alert("Error", "Failed to load expenses");
+    } finally {
+      setLoading(false);
     }
-    setShowBudgetModal(false);
-    setTempBudget('');
   };
+
+  const handleAddExpense = async (expenseData: CreateExpenseData) => {
+    try {
+      await addExpense(expenseData);
+      await loadExpenses();
+    } catch (error: any) {
+      Alert.alert("Error", "Failed to add expense");
+    }
+  };
+
+  const handleEditExpense = async (expenseData: CreateExpenseData) => {
+    if (!editingExpense?.id) return;
+
+    try {
+      await updateExpense(tripId, editingExpense.id, expenseData);
+      setEditingExpense(null);
+      await loadExpenses();
+    } catch (error: any) {
+      Alert.alert("Error", "Failed to update expense");
+    }
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    try {
+      await deleteExpense(tripId, expenseId);
+      await loadExpenses();
+    } catch (error: any) {
+      Alert.alert("Error", "Failed to delete expense");
+    }
+  };
+
+  const handleUpdateBudget = async () => {
+    if (!tempBudget.trim()) {
+      Alert.alert("Invalid Budget", "Please enter a valid budget amount");
+      return;
+    }
+
+    const newBudget = parseFloat(tempBudget);
+    if (isNaN(newBudget) || newBudget <= 0) {
+      Alert.alert("Invalid Budget", "Please enter a valid positive number");
+      return;
+    }
+
+    try {
+      await updateTrip(tripId, { budget: newBudget });
+      trip.budget = newBudget;
+      setShowBudgetModal(false);
+      setTempBudget("");
+      Alert.alert("Success", "Budget updated successfully");
+    } catch (error: any) {
+      Alert.alert("Error", "Failed to update budget");
+    }
+  };
+
+  const totalSpent = calculateTotalSpent(expenses);
+  const remaining = trip.budget - totalSpent;
+  const isOverBudget = remaining < 0;
+  const spentPercent = trip.budget > 0 ? (totalSpent / trip.budget) * 100 : 0;
+  const progressWidth = Math.min(spentPercent, 100);
+
+  const byCategory = getExpensesByCategory(expenses);
+  const topCategories = Object.entries(byCategory)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6366F1" />
+        <Text style={styles.loadingText}>Loading expenses...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Budget Header */}
-      <View style={styles.budgetHeader}>
-        <Text style={styles.budgetAmount}>PKR {budget.total.toFixed(2)}</Text>
-        <TouchableOpacity onPress={() => setShowBudgetModal(true)}>
-          <Text style={styles.setBudgetText}>Edit budget</Text>
-        </TouchableOpacity>
-        <View style={styles.progressBar}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${progressWidth}%`, backgroundColor: progressColor },
-            ]}
-          />
-        </View>
-        <Text style={styles.progressText}>
-          Spent: PKR {budget.spent.toFixed(2)} ({spentPercent.toFixed(0)}%)
-        </Text>
-      </View>
-
-      {/* Expenses */}
-      <View style={styles.expensesSection}>
-        <Text style={styles.sectionTitle}>Expenses</Text>
-        {expenses.length === 0 ? (
-          <Text style={styles.placeholder}>You haven’t added any expenses yet.</Text>
-        ) : (
-          <FlatList
-            data={expenses}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.expenseRow}>
-                <MaterialIcons name={item.categoryIcon as any} size={22} color="#000" />
-                <Text style={styles.expenseText}>
-                  {item.category} — {item.amount} {item.currency}
-                </Text>
-                <TouchableOpacity onPress={() => deleteExpense(item.id)}>
-                  <MaterialIcons name="delete" size={22} color="#FF3B30" />
-                </TouchableOpacity>
-              </View>
-            )}
-          />
-        )}
-      </View>
-
-      {/* Add Expense Button */}
-      <TouchableOpacity
-        style={styles.addExpenseBtn}
-        onPress={() => setShowExpenseModal(true)}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <MaterialIcons name="add" size={22} color="#fff" />
-        <Text style={styles.addExpenseText}>Add Expense</Text>
-      </TouchableOpacity>
+        {/* Budget Overview Card */}
+        <View style={styles.budgetCard}>
+          <View style={styles.budgetHeader}>
+            <Text style={styles.budgetLabel}>Trip Budget</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setTempBudget(trip.budget.toString());
+                setShowBudgetModal(true);
+              }}
+              style={styles.editButton}
+            >
+              <MaterialIcons name="edit" size={18} color="#6B7280" />
+              <Text style={styles.editText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
 
-      {/* Add Expense Bottom Sheet */}
-      <ExpenseEditorBottomSheet
+          <Text style={styles.budgetAmount}>
+            {trip.currency} {trip.budget.toLocaleString()}
+          </Text>
+
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBarBg}>
+              <View
+                style={[
+                  styles.progressBar,
+                  {
+                    width: `${progressWidth}%`,
+                    backgroundColor: isOverBudget
+                      ? "#EF4444"
+                      : spentPercent > 75
+                        ? "#F59E0B"
+                        : "#10B981",
+                  },
+                ]}
+              />
+            </View>
+            <Text style={styles.progressLabel}>
+              {spentPercent.toFixed(0)}% {isOverBudget ? "over budget" : "used"}
+            </Text>
+          </View>
+
+          {/* Stats Grid */}
+          <View style={styles.statsGrid}>
+            <View style={styles.statBox}>
+              <View style={[styles.statIcon, { backgroundColor: "#FEE2E2" }]}>
+                <MaterialIcons name="trending-up" size={20} color="#EF4444" />
+              </View>
+              <Text style={styles.statLabel}>Spent</Text>
+              <Text style={styles.statValue}>
+                {trip.currency} {totalSpent.toLocaleString()}
+              </Text>
+            </View>
+
+            <View style={styles.statBox}>
+              <View
+                style={[
+                  styles.statIcon,
+                  { backgroundColor: isOverBudget ? "#FEE2E2" : "#D1FAE5" },
+                ]}
+              >
+                <MaterialIcons
+                  name={isOverBudget ? "warning" : "account-balance-wallet"}
+                  size={20}
+                  color={isOverBudget ? "#EF4444" : "#10B981"}
+                />
+              </View>
+              <Text style={styles.statLabel}>
+                {isOverBudget ? "Over Budget" : "Remaining"}
+              </Text>
+              <Text
+                style={[
+                  styles.statValue,
+                  { color: isOverBudget ? "#EF4444" : "#10B981" },
+                ]}
+              >
+                {trip.currency} {Math.abs(remaining).toLocaleString()}
+              </Text>
+            </View>
+          </View>
+
+          {/* Over Budget Warning */}
+          {isOverBudget && (
+            <View style={styles.warningBanner}>
+              <MaterialIcons name="error-outline" size={20} color="#DC2626" />
+              <Text style={styles.warningText}>
+                You've exceeded your budget by {trip.currency}{" "}
+                {Math.abs(remaining).toLocaleString()}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Top Categories */}
+        {topCategories.length > 0 && (
+          <View style={styles.categoriesCard}>
+            <Text style={styles.cardTitle}>Top Spending</Text>
+            <View style={styles.categoriesList}>
+              {topCategories.map(([category, amount], index) => {
+                const percent = (amount / totalSpent) * 100;
+                return (
+                  <View key={category} style={styles.categoryRow}>
+                    <View style={styles.categoryInfo}>
+                      <View
+                        style={[
+                          styles.categoryDot,
+                          {
+                            backgroundColor:
+                              index === 0
+                                ? "#6366F1"
+                                : index === 1
+                                  ? "#8B5CF6"
+                                  : "#EC4899",
+                          },
+                        ]}
+                      />
+                      <Text style={styles.categoryName}>{category}</Text>
+                    </View>
+                    <View style={styles.categoryStats}>
+                      <Text style={styles.categoryAmount}>
+                        {trip.currency} {amount.toLocaleString()}
+                      </Text>
+                      <Text style={styles.categoryPercent}>
+                        {percent.toFixed(0)}%
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* Expenses List */}
+        <View style={styles.expensesCard}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>All Expenses</Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{expenses.length}</Text>
+            </View>
+          </View>
+
+          {expenses.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIcon}>
+                <MaterialIcons name="receipt-long" size={40} color="#9CA3AF" />
+              </View>
+              <Text style={styles.emptyTitle}>No expenses yet</Text>
+              <Text style={styles.emptySubtitle}>
+                Start tracking your spending
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.expensesList}>
+              {expenses.map((expense) => (
+                <ExpenseCard
+                  key={expense.id}
+                  expense={expense}
+                  onDelete={() => handleDeleteExpense(expense.id!)}
+                  onEdit={() => {
+                    setEditingExpense(expense);
+                    setShowExpenseModal(true);
+                  }}
+                />
+              ))}
+            </View>
+          )}
+        </View>
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      {/* Bottom Add Button */}
+      <View style={styles.bottomContainer}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            setEditingExpense(null);
+            setShowExpenseModal(true);
+          }}
+        >
+          <MaterialIcons name="add" size={24} color="#fff" />
+          <Text style={styles.addButtonText}>Add Expense</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Expense Editor Modal */}
+      <ExpenseEditorModal
         visible={showExpenseModal}
-        onClose={() => setShowExpenseModal(false)}
-        onSave={(expense: NewExpense) => {
-          addExpense(expense); // ✅ context generates id
+        tripId={tripId}
+        expense={editingExpense}
+        onClose={() => {
           setShowExpenseModal(false);
+          setEditingExpense(null);
         }}
+        onSave={editingExpense ? handleEditExpense : handleAddExpense}
       />
 
-      {/* Budget Modal */}
-      <Modal visible={showBudgetModal} transparent animationType="slide">
+      {/* Edit Budget Modal */}
+      <Modal visible={showBudgetModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Budget</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter budget amount"
-              keyboardType="numeric"
-              value={tempBudget}
-              onChangeText={setTempBudget}
-            />
+            <Text style={styles.modalTitle}>Update Budget</Text>
+            <Text style={styles.modalSubtitle}>Set your total trip budget</Text>
+            <View style={styles.inputContainer}>
+              <Text style={styles.currencyPrefix}>{trip.currency}</Text>
+              <TextInput
+                style={styles.budgetInput}
+                placeholder="0"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="decimal-pad"
+                value={tempBudget}
+                onChangeText={setTempBudget}
+                autoFocus
+              />
+            </View>
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={styles.modalBtn}
-                onPress={() => setShowBudgetModal(false)}
+                style={styles.modalButtonSecondary}
+                onPress={() => {
+                  setShowBudgetModal(false);
+                  setTempBudget("");
+                }}
               >
-                <Text style={styles.modalBtnText}>Cancel</Text>
+                <Text style={styles.modalButtonTextSecondary}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalBtn, styles.saveBtn]}
-                onPress={saveBudget}
+                style={styles.modalButtonPrimary}
+                onPress={handleUpdateBudget}
               >
-                <Text style={[styles.modalBtnText, styles.saveBtnText]}>Save</Text>
+                <Text style={styles.modalButtonTextPrimary}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -134,81 +373,351 @@ export default function BudgetingTab() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  budgetHeader: {
-    backgroundColor: '#001F54',
-    paddingVertical: 30,
-    alignItems: 'center',
+  container: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
   },
-  budgetAmount: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
-  setBudgetText: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+  },
+  loadingText: {
+    marginTop: 12,
     fontSize: 14,
-    color: '#fff',
-    marginTop: 6,
-    textDecorationLine: 'underline',
+    color: "#6B7280",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  budgetCard: {
+    backgroundColor: "#fff",
+    margin: 16,
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  budgetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  budgetLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  editButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 8,
+  },
+  editText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  budgetAmount: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 16,
+  },
+  progressContainer: {
+    marginBottom: 20,
+  },
+  progressBarBg: {
+    height: 8,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 4,
+    overflow: "hidden",
+    marginBottom: 8,
   },
   progressBar: {
-    height: 12,
-    width: '80%',
-    borderRadius: 6,
-    overflow: 'hidden',
-    marginTop: 12,
-    backgroundColor: '#eee',
+    height: "100%",
+    borderRadius: 4,
   },
-  progressFill: { height: '100%', borderRadius: 6 },
-  progressText: { fontSize: 12, color: '#fff', marginTop: 6 },
-  expensesSection: {
+  progressLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  statsGrid: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  statBox: {
     flex: 1,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#eee',
+    backgroundColor: "#F9FAFB",
+    padding: 16,
     borderRadius: 12,
-    margin: 16,
-    backgroundColor: '#fafafa',
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#000', marginBottom: 10 },
-  placeholder: { fontSize: 14, color: '#666', marginBottom: 20 },
-  expenseRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  expenseText: { marginLeft: 8, fontSize: 14, color: '#000', flex: 1 },
-  addExpenseBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#000',
-    paddingVertical: 14,
+  statIcon: {
+    width: 36,
+    height: 36,
     borderRadius: 8,
-    margin: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
   },
-  addExpenseText: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginLeft: 6 },
+  statLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 4,
+    fontWeight: "500",
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  warningBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#FEF2F2",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: "#FEE2E2",
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#DC2626",
+    fontWeight: "500",
+  },
+  categoriesCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111827",
+    marginBottom: 16,
+  },
+  categoriesList: {
+    gap: 12,
+  },
+  categoryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  categoryInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+  categoryDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  categoryName: {
+    fontSize: 14,
+    color: "#374151",
+    fontWeight: "500",
+  },
+  categoryStats: {
+    alignItems: "flex-end",
+  },
+  categoryAmount: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  categoryPercent: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 2,
+  },
+  expensesCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  badge: {
+    backgroundColor: "#EEF2FF",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6366F1",
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: "center",
+  },
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: "#9CA3AF",
+  },
+  expensesList: {
+    padding: 16,
+  },
+  bottomContainer: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#6366F1",
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+  },
+  addButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+  },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  modalContent: { backgroundColor: '#fff', width: '80%', borderRadius: 10, padding: 20 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12, color: '#000' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 20,
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 24,
+    width: "85%",
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  modalSubtitle: {
     fontSize: 14,
-    color: '#000',
+    color: "#6B7280",
+    marginBottom: 24,
+    textAlign: "center",
   },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end' },
-  modalBtn: { paddingVertical: 8, paddingHorizontal: 14 },
-  modalBtnText: { fontSize: 14, color: '#000' },
-  saveBtn: { backgroundColor: '#000', borderRadius: 6 },
-  saveBtnText: { color: '#fff' },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  currencyPrefix: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#6B7280",
+    marginRight: 8,
+  },
+  budgetInput: {
+    flex: 1,
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#111827",
+    paddingVertical: 16,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  modalButtonSecondary: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+  },
+  modalButtonPrimary: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    backgroundColor: "#6366F1",
+  },
+  modalButtonTextSecondary: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  modalButtonTextPrimary: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+  },
 });

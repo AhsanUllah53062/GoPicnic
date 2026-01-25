@@ -117,22 +117,16 @@ export default function StartPlanning() {
       return;
     }
 
-    // Type guard: ensure dates and locations are not null after validation
-    if (!user || !fromLocation || !toLocation || !startDate || !endDate) {
-      Alert.alert("Error", "Missing required information");
-      return;
-    }
-
     setLoading(true);
     console.log("⏳ Creating trip...");
 
     try {
       const tripData = {
-        userId: user.id,
-        fromLocation: fromLocation,
-        toLocation: toLocation,
-        startDate: startDate,
-        endDate: endDate,
+        userId: user!.id,
+        fromLocation: fromLocation!,
+        toLocation: toLocation!,
+        startDate: startDate!,
+        endDate: endDate!,
         budget: parseFloat(budget),
         currency: "PKR",
         placeId: placeId || undefined,
@@ -152,18 +146,13 @@ export default function StartPlanning() {
 
       console.log("✅ Trip created successfully with ID:", tripId);
 
-      // Navigate to itinerary builder page
-      console.log("🔀 Navigating to itinerary-builder with trip ID:", tripId);
+      // Navigate to trip details page
+      console.log("🔀 Navigating to trip-details with trip ID:", tripId);
 
       router.push({
-        pathname: "/itinerary-builder",
+        pathname: "/trip-details",
         params: {
           tripId: tripId,
-          from: fromLocation,
-          to: toLocation,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          budget: budget,
         },
       });
     } catch (error: any) {
