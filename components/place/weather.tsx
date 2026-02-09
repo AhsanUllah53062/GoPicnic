@@ -1,26 +1,31 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { fetchForecast, fetchWeather } from "../services/weather";
+import { fetchForecast, fetchWeather } from "../../services/weather";
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function WeatherPage() {
-  const { lat, lon, name } = useLocalSearchParams<{
-    lat: string;
-    lon: string;
-    name: string;
-  }>();
-  const router = useRouter();
+type WeatherPageProps = {
+  lat: string;
+  lon: string;
+  name: string;
+  onClose?: () => void;
+};
+
+export default function WeatherPage({
+  lat,
+  lon,
+  name,
+  onClose,
+}: WeatherPageProps) {
   const [weather, setWeather] = useState<any>(null);
   const [forecast, setForecast] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -66,13 +71,16 @@ export default function WeatherPage() {
     <ScrollView style={styles.container}>
       {/* Background */}
       <Image
-        source={require("../assets/clear.jpg")}
+        source={require("../../assets/clear.jpg")}
         style={styles.background}
         resizeMode="cover"
       />
       <View style={styles.overlay}>
         {/* Back Button */}
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={onClose ? onClose : () => {}}
+        >
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
 

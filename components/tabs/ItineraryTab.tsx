@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Trip } from "../../services/trips";
-import DayCard from "../DayCard";
+import DayCard from "../trip-details/DayCard";
 
 type ItineraryTabProps = {
   tripId: string;

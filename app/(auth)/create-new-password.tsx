@@ -2,7 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
-import CustomButton from "../../components/CustomButton";
+import CustomButton from "../../components/common/CustomButton";
 
 export default function CreateNewPassword() {
   const router = useRouter();

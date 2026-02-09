@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,12 +11,13 @@ import {
 } from "react-native";
 import { db } from "../../services/firebase";
 
-import Gallery from "../../components/Gallery";
-import LocationModal from "../../components/LocationModal";
+import Gallery from "../../components/place/Gallery";
+import LocationModal from "../../components/place/LocationModal";
 import PlaceActions from "../../components/place/PlaceActions";
 import PlaceHeader from "../../components/place/PlaceHeader";
 import PlaceInfo from "../../components/place/PlaceInfo";
-import ReviewsModal from "../../components/ReviewsModal";
+import ReviewsModal from "../../components/place/ReviewsModal";
+import WeatherPage from "../../components/place/weather";
 
 export default function PlaceDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -24,6 +26,7 @@ export default function PlaceDetails() {
 
   const [showMap, setShowMap] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
+  const [showWeather, setShowWeather] = useState(false);
 
   useEffect(() => {
     const fetchPlace = async () => {
@@ -56,16 +59,7 @@ export default function PlaceDetails() {
       <PlaceActions
         temperature={place.temperature}
         rating={place.rating}
-        onTemp={() =>
-          router.push({
-            pathname: "/weather",
-            params: {
-              lat: place.latitude?.toString(),
-              lon: place.longitude?.toString(),
-              name: place.name ?? "",
-            },
-          })
-        }
+        onTemp={() => setShowWeather(true)}
         onMap={() => setShowMap(true)}
         onReviews={() => setShowReviews(true)}
       />
@@ -93,7 +87,7 @@ export default function PlaceDetails() {
           style={styles.primaryBtn}
           onPress={() =>
             router.push({
-              pathname: "/start-planning",
+              pathname: "/trip-details/start-planning",
               params: {
                 to: place.name ?? "",
                 toImage: place.gallery?.[0] ?? "",
@@ -117,6 +111,19 @@ export default function PlaceDetails() {
         onClose={() => setShowReviews(false)}
         placeId={place.id}
       />
+
+      <Modal
+        visible={showWeather}
+        animationType="slide"
+        onRequestClose={() => setShowWeather(false)}
+      >
+        <WeatherPage
+          lat={place.latitude?.toString() ?? ""}
+          lon={place.longitude?.toString() ?? ""}
+          name={place.name ?? ""}
+          onClose={() => setShowWeather(false)}
+        />
+      </Modal>
     </ScrollView>
   );
 }

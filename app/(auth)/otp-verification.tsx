@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import CustomButton from "../../components/CustomButton";
+import CustomButton from "../../components/common/CustomButton";
 
 export default function OtpVerification() {
   const router = useRouter();

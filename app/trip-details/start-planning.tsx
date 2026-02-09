@@ -14,9 +14,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import LocationSearchModal from "../components/LocationSearchModal";
-import { createTrip } from "../services/trips";
-import { useUser } from "../src/context/UserContext";
+import LocationSearchModal from "../../components/trip-details/LocationSearchModal";
+import { createTrip } from "../../services/trips";
+import { useUser } from "../../src/context/UserContext";
 
 export default function StartPlanning() {
   const router = useRouter();
@@ -150,7 +150,7 @@ export default function StartPlanning() {
       console.log("🔀 Navigating to trip-details with trip ID:", tripId);
 
       router.push({
-        pathname: "/trip-details",
+        pathname: "/trip-details/trip-details",
         params: {
           tripId: tripId,
         },

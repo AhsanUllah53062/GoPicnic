@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Trip } from "../../services/trips";
+import { Trip } from "../../../services/trips";
 import BudgetingTab from "./BudgetingTab";
 import CarpoolTab from "./CarpoolTab";
 import ItineraryTab from "./ItineraryTab";

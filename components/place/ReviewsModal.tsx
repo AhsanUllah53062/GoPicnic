@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { db } from "../services/firebase";
+import { db } from "../../services/firebase";
 
 type Review = {
   id: string;

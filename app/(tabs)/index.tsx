@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { FlatList, Image, StyleSheet, Text, View } from "react-native";
+import SectionHeader from "../../components/common/SectionHeader";
 import PlaceCard from "../../components/home/PlaceCard";
 import ProvinceDropdown from "../../components/home/ProvinceDropdown";
-import SectionHeader from "../../components/SectionHeader";
 import { fetchPlaces, Place } from "../../services/places";
 
 export default function Home() {

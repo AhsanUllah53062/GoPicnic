@@ -1,116 +1,125 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-export default function SecuritySettings() {
+export default function SecurityPage() {
   const router = useRouter();
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [twoFA, setTwoFA] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
-  const handleSave = () => {
-    // TODO: integrate with backend for password update + 2FA toggle
-    router.back();
+  const handleChangePassword = () => {
+    Alert.alert(
+      "Coming Soon",
+      "Change password feature will be available soon",
+    );
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+    <View style={securityStyles.container}>
+      <View style={securityStyles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color="#000" />
+          <MaterialIcons name="arrow-back" size={24} color="#111827" />
         </TouchableOpacity>
-        <Text style={styles.title}>Password & Security</Text>
+        <Text style={securityStyles.headerTitle}>Password & Security</Text>
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Password Fields */}
-      <View style={styles.section}>
-        <Text style={styles.sectionHeading}>Change Password</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Current Password"
-          secureTextEntry
-          value={currentPassword}
-          onChangeText={setCurrentPassword}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="New Password"
-          secureTextEntry
-          value={newPassword}
-          onChangeText={setNewPassword}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm New Password"
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
-      </View>
-
-      {/* Two-Factor Authentication */}
-      <View style={styles.section}>
-        <Text style={styles.sectionHeading}>Two-Factor Authentication</Text>
-        <View style={styles.row}>
-          <Text style={styles.label}>Enable 2FA</Text>
-          <Switch value={twoFA} onValueChange={setTwoFA} />
+      <ScrollView style={securityStyles.content}>
+        <View style={securityStyles.section}>
+          <Text style={securityStyles.sectionTitle}>Password</Text>
+          <TouchableOpacity
+            style={securityStyles.menuItem}
+            onPress={handleChangePassword}
+          >
+            <MaterialIcons name="lock-outline" size={22} color="#6366F1" />
+            <Text style={securityStyles.menuItemText}>Change Password</Text>
+            <MaterialIcons name="chevron-right" size={24} color="#D1D5DB" />
+          </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Save Button */}
-      <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-        <Text style={styles.saveText}>Save Changes</Text>
-      </TouchableOpacity>
+        <View style={securityStyles.section}>
+          <Text style={securityStyles.sectionTitle}>
+            Biometric Authentication
+          </Text>
+          <View style={securityStyles.menuItem}>
+            <MaterialIcons name="fingerprint" size={22} color="#8B5CF6" />
+            <Text style={securityStyles.menuItemText}>Face ID / Touch ID</Text>
+            <Switch
+              value={biometricEnabled}
+              onValueChange={setBiometricEnabled}
+              trackColor={{ true: "#6366F1" }}
+            />
+          </View>
+        </View>
+
+        <View style={securityStyles.section}>
+          <Text style={securityStyles.sectionTitle}>
+            Two-Factor Authentication
+          </Text>
+          <View style={securityStyles.menuItem}>
+            <MaterialIcons name="security" size={22} color="#10B981" />
+            <Text style={securityStyles.menuItemText}>Enable 2FA</Text>
+            <Switch
+              value={twoFactorEnabled}
+              onValueChange={setTwoFactorEnabled}
+              trackColor={{ true: "#6366F1" }}
+            />
+          </View>
+          <Text style={securityStyles.helperText}>
+            Add an extra layer of security to your account
+          </Text>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f7fa', padding: 20 },
+const securityStyles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#F9FAFB" },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "ios" ? 60 : 20,
+    paddingBottom: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
-  title: { fontSize: 20, fontWeight: '700', textAlign: 'center', flex: 1 },
-  section: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+  headerTitle: { fontSize: 18, fontWeight: "600", color: "#111827" },
+  content: { flex: 1, padding: 16 },
+  section: { marginBottom: 24 },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#6B7280",
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     padding: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    borderRadius: 12,
+    gap: 12,
   },
-  sectionHeading: { fontSize: 16, fontWeight: '600', marginBottom: 12 },
-  input: {
-    backgroundColor: '#f9f9f9',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 12,
-    fontSize: 14,
+  menuItemText: { flex: 1, fontSize: 15, fontWeight: "500", color: "#111827" },
+  helperText: {
+    fontSize: 13,
+    color: "#9CA3AF",
+    marginTop: 8,
+    paddingHorizontal: 4,
   },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  label: { fontSize: 14, color: '#000' },
-  saveBtn: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  saveText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

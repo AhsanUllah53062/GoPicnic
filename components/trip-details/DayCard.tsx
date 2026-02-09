@@ -15,10 +15,10 @@ import {
   PlaceVisit,
   saveDayPlan,
   Todo,
-} from "../services/itinerary";
-import AddPlaceModal from "./itinerary/AddPlaceModal";
-import PlaceVisitCard from "./itinerary/PlaceVisitCard";
-import TodoItem from "./itinerary/TodoItem";
+} from "../../services/itinerary";
+import AddPlaceModal from "../itinerary/AddPlaceModal";
+import PlaceVisitCard from "../itinerary/PlaceVisitCard";
+import TodoItem from "../itinerary/TodoItem";
 
 type Props = {
   tripId: string;

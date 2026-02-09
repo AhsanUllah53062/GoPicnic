@@ -2,17 +2,18 @@
 
 ## Project Overview
 
-**goPicnic** is a React Native/Expo mobile app for trip planning, expense sharing, shopping, and carpool coordination. Built with Expo Router for file-based navigation and React Context API for state management. Firebase backend handles authentication and data persistence.
+**goPicnic** is a React Native/Expo mobile app for trip planning, expense sharing, shopping, and carpool coordination. Built with Expo Router (file-based routing) and React Context API (state management). Firebase backend for auth; Firestore integration incomplete.
 
-**Key Tech Stack:**
+**Current Tech Stack:**
 
 - Expo 54.0.20 (React Native universal app)
 - Expo Router 6.0.13 (file-based routing)
 - React 19.1.0 + TypeScript 5.9.2
-- Firebase 12.7.0 (auth + Firestore)
-- React Context API (Cart, Trip, User state)
-- AsyncStorage 2.2.0 (persistent local data)
-- React Navigation 7.4.0 (tabs + stack)
+- Firebase 12.7.0 (auth only; Firestore partial)
+- React Context API (UserContext, TripContext, CartContext)
+- AsyncStorage 2.2.0 (cart persistence)
+- React Navigation 7.4.0 (bottom tabs + stacks)
+- @gorhom/bottom-sheet 5.2.6 (modals)
 
 ---
 
@@ -20,54 +21,54 @@
 
 ### 1. **State Management Layers**
 
-Three global contexts manage app state:
+Three global contexts in `/src/context/`:
 
-- **`UserContext` (`src/context/UserContext.tsx`)**: User auth data (id, name, email, avatar)
-  - Pattern: `const { user, setUser } = useUser()` - throws if used outside provider
-  - Called in root `app/_layout.tsx` wrapped in `AuthProvider`
+- **`UserContext.tsx`**: User auth state (id, name, email, avatar, isAuthenticated)
+  - Usage: `const { user, setUser } = useUser()` (throws outside AuthProvider)
+  - Wrapped in root via AuthProvider
 
-- **`TripContext` (`src/context/TripContext.tsx`)**: Trip planning (itinerary, expenses, budget, todos)
-  - Complex state with nested DayItinerary[] and Expense[]
-  - Includes notifications and budget tracking
-  - Provider wraps entire app in `_layout.tsx`
+- **`TripContext.tsx`**: Trip planning (itinerary, expenses, budget, todos)
+  - State: `DayItinerary[]`, `Expense[]`, notifications, budget tracking
+  - Usage: `const { trip, setItinerary, addExpense } = useTrip()`
 
-- **`CartContext` (`src/context/CartContext.tsx`)**: E-commerce cart & orders
-  - Persists to AsyncStorage automatically
-  - Order history tracked with status (Processing/Shipped/Delivered)
-  - Pattern: `const { cartItems, addToCart, removeFromCart } = useCart()`
+- **`CartContext.tsx`**: E-commerce cart & order history
+  - Auto-persists to AsyncStorage (`cart_items`, `orders` keys)
+  - Order statuses: Processing → Shipped → Delivered
+  - Usage: `const { cartItems, addToCart, removeFromCart } = useCart()`
 
-**Provider Nesting** (root `_layout.tsx`):
+**Provider Nesting Order** (root `app/_layout.tsx`):
 
 ```tsx
 <GestureHandlerRootView> → <SafeAreaProvider> → <AuthProvider> →
 <TripProvider> → <CartProvider> → <StatusBar/ThemeProvider> → <Stack/>
 ```
 
-Always maintain this order for provider access in any new providers.
+**Critical**: Maintain this exact order; inner providers depend on outer ones.
 
 ### 2. **File-Based Routing (Expo Router)**
 
-Navigation structure mirrors filesystem under `/app`:
+Navigation structure in `/app` mirrors filesystem:
 
-- **`app/(auth)/`**: Authentication screens (welcome, login, signup, forgot-password, otp-verification)
-  - Entry point for unauthenticated users
-  - No tab navigation in auth flow
-
-- **`app/(tabs)/`**: Main app navigation after login
-  - Horizontal tab bar with: home (index), carpool, create-plan, shopping, inbox, profile
+- **`app/(auth)/`**: Auth-only screens (welcome, login, signup, forgot-password, otp-verification, create-new-password)
+  - Entry point for unauthenticated users; no tab nav
+- **`app/(tabs)/`**: Main post-login navigation
+  - Bottom tab bar: home, carpool, create-plan, shopping, inbox, profile
   - Each tab can have internal stacks
 
-- **`app/trip/[id].tsx`**: Dynamic trip details (route param: trip ID)
-- **`app/shop/*`**: E-commerce flow (cart, checkout, payment, orders, product/[id])
-- **`app/profile/*`**: User profile management (details, edit, security)
-- **`app/chat/[username].tsx`** & **`notification/[id].tsx`**: Dynamic routes for messaging/notifications
+- **`app/profile/`**: Nested profile screens (details.tsx, security.tsx, preferences.tsx, favorites.tsx, friends.tsx, gear.tsx, help.tsx, emergency.tsx, documents.tsx, personal-info.tsx)
+- **`app/shop/`**: E-commerce flow (cart, checkout, payment, orders, product-detail, product/[id])
 
-**Route Parameter Pattern:**
+- **`app/trip/[id].tsx`**: Dynamic trip details by ID param
+
+- **`app/place/[id].tsx`**: Place details with weather integration
+
+- **`app/chat/[username].tsx`** & **`app/notification/[id].tsx`**: Dynamic routes
+
+**Dynamic Route Pattern:**
 
 ```tsx
-// In /app/trip/[id].tsx
 import { useLocalSearchParams } from "expo-router";
-const { id } = useLocalSearchParams();
+const { id } = useLocalSearchParams<{ id: string }>();
 ```
 
 ### 3. **Service Layer** (`/services`)
@@ -85,6 +86,8 @@ API integration & external calls:
   - Requires `OPENWEATHER_API_KEY` from `.env`
 
 - **`services/places.ts`**: Places data (currently mock data)
+
+- **Other services**: `carpool.ts`, `expenses.ts`, `itinerary.ts`, `trips.ts`, `profile.ts`, `imageUpload.ts`, `googlePlaces.ts`, `tripSummary.ts`
 
 **Environment Variables** (`.env` file - not in repo):
 
@@ -115,9 +118,15 @@ Reusable UI components in `/components`:
   - Imported in screens for modal editing
 
 - **Exports Index**: `components/index.ts` exports all components for clean imports
+
   ```tsx
-  export { default as CustomButton } from "./CustomButton";
+  export { default as CustomButton } from "./common/CustomButton";
   ```
+
+- **Basic UI Primitives**: Organized in `components/common/` subdirectory:
+  - CustomButton, CustomPicker, PageIndicator, SectionHeader, themed-text, themed-view
+  - All styling-related reusable components consolidated in one location
+  - Imported via `@/components/common/*` or through `components/index.ts` exports
 
 ### 5. **Type Safety**
 
@@ -149,6 +158,22 @@ Located in `/hooks`:
 - **Context Hooks**: `useUser()`, `useTrip()`, `useCart()` in respective contexts
 
 Pattern: All context hooks throw error if used outside provider scope.
+
+---
+
+## Important: Unused Code to Be Deleted
+
+The following files are **orphaned and not used anywhere** in the project. Delete them:
+
+- ❌ `app/edit-profile.tsx` - Empty file
+- ❌ `app/trip-overview.tsx` - Not referenced from any navigation
+- ❌ `app/itinerary-builder.tsx` - Abandoned prototype, no active routes
+
+Active alternatives that replaced them:
+
+- Profile editing flows through `app/(tabs)/profile.tsx` → `app/profile/details.tsx`
+- Trip details/itinerary via `app/trip/[id].tsx` with TripDetailsTabs component
+- Weather display at `app/weather.tsx` (referenced from `app/place/[id].tsx`)
 
 ---
 
@@ -287,13 +312,43 @@ app/shop/cart.tsx displays CartContext.cartItems
 - ✅ No offline-first sync (AsyncStorage only, no sync queue)
 - ✅ Testing: No Jest/Vitest setup
 
-### Scalability Notes
+### Recommended Restructuring for Scalability
 
-- **Structure review needed** (see RESTRUCTURING_PLAN.md in previous context)
-  - Move `/services` → `/src/core/services`
-  - Create `/src/features/` for feature-based organization
-- **Performance**: FlatList optimization needed for large product/place lists
-- **Bundle size**: Unused Expo modules should be pruned
+**Phase 1: Directory Reorganization** (non-breaking)
+
+```
+/src
+├── core/
+│   ├── services/       (move from /services)
+│   ├── context/        (move from /src/context)
+│   └── types.ts        (move global types)
+├── features/
+│   ├── trip/           (trip-related screens & components)
+│   ├── shop/           (shopping feature)
+│   ├── profile/        (profile management)
+│   ├── carpool/
+│   └── shared/         (shared components between features)
+└── hooks/              (custom hooks)
+
+/app (unchanged - routing structure)
+```
+
+**Phase 2: Feature-Based Services**
+
+- Move service files into `/src/features/{feature}/services`
+- Example: `trip/services/itinerary.ts`, `shop/services/products.ts`
+
+**Phase 3: Component Co-location**
+
+- Move feature components into `/src/features/{feature}/components`
+- Keep only truly shared UI in `/src/features/shared/components`
+
+**Benefits:**
+
+- Easier to extract/move features
+- Clear ownership boundaries
+- Simpler dependency management
+- Better IDE search results
 
 ---
 

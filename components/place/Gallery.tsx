@@ -1,16 +1,11 @@
-import { Asset } from 'expo-asset';
-import { useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import ImageViewing from 'react-native-image-viewing';
-import ImageItem from './ImageItem';
+import { Asset } from "expo-asset";
+import { useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import ImageViewing from "react-native-image-viewing";
+import ImageItem from "./ImageItem";
 
 type Props = {
-  images: (number | { uri: string })[];   // ✅ supports require() and remote
+  images: (number | { uri: string })[]; // ✅ supports require() and remote
 };
 
 export default function Gallery({ images }: Props) {
@@ -33,13 +28,13 @@ export default function Gallery({ images }: Props) {
 
       <ImageViewing
         images={images.map((img) => {
-          if (typeof img === 'number') {
+          if (typeof img === "number") {
             const asset = Asset.fromModule(img);
             return { uri: asset.uri };
-          } else if ('uri' in img) {
+          } else if ("uri" in img) {
             return { uri: img.uri };
           }
-          return { uri: '' };
+          return { uri: "" };
         })}
         imageIndex={currentIndex}
         visible={visible}
@@ -51,5 +46,5 @@ export default function Gallery({ images }: Props) {
 
 const styles = StyleSheet.create({
   container: { marginTop: 20 },
-  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  title: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
 });

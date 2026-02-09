@@ -10,9 +10,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import TripDetailsTabs from "../components/tabs/TripDetailsTabs";
-import { getTrip, Trip } from "../services/trips";
-import { useUser } from "../src/context/UserContext";
+import TripDetailsTabs from "../../components/tabs/TripDetailsTabs";
+import { getTrip, Trip } from "../../services/trips";
+import { useUser } from "../../src/context/UserContext";
 
 export default function TripDetails() {
   const router = useRouter();
@@ -92,7 +92,7 @@ export default function TripDetails() {
         source={
           trip.placeImage
             ? { uri: trip.placeImage }
-            : require("../assets/faisal.jpg")
+            : require("../../assets/faisal.jpg")
         }
         style={styles.headerImage}
       >

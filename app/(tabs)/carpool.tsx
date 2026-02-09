@@ -1,7 +1,13 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router'; // 👈 import router
-import { useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router"; // 👈 import router
+import { useState } from "react";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 type Carpool = {
   id: string;
@@ -15,44 +21,44 @@ type Carpool = {
 };
 
 export default function CarpoolTab() {
-  const [sortBy, setSortBy] = useState<'date' | 'seats'>('date');
+  const [sortBy, setSortBy] = useState<"date" | "seats">("date");
   const router = useRouter(); // 👈 initialize router
 
   const mockCarpools: Carpool[] = [
     {
-      id: '1',
-      tripName: 'Islamabad to Lahore',
-      date: '2025-12-25',
-      origin: 'Islamabad',
-      destination: 'Lahore',
-      driver: 'Ali Khan',
+      id: "1",
+      tripName: "Islamabad to Lahore",
+      date: "2025-12-25",
+      origin: "Islamabad",
+      destination: "Lahore",
+      driver: "Ali Khan",
       availableSeats: 3,
-      notes: 'Leaving early morning, no smoking.',
+      notes: "Leaving early morning, no smoking.",
     },
     {
-      id: '2',
-      tripName: 'Quetta to Karachi',
-      date: '2025-12-28',
-      origin: 'Quetta',
-      destination: 'Karachi',
-      driver: 'Sara Ahmed',
+      id: "2",
+      tripName: "Quetta to Karachi",
+      date: "2025-12-28",
+      origin: "Quetta",
+      destination: "Karachi",
+      driver: "Sara Ahmed",
       availableSeats: 2,
-      notes: 'Comfortable SUV, snacks included.',
+      notes: "Comfortable SUV, snacks included.",
     },
     {
-      id: '3',
-      tripName: 'Peshawar to Murree',
-      date: '2025-12-24',
-      origin: 'Peshawar',
-      destination: 'Murree',
-      driver: 'Bilal Hussain',
+      id: "3",
+      tripName: "Peshawar to Murree",
+      date: "2025-12-24",
+      origin: "Peshawar",
+      destination: "Murree",
+      driver: "Bilal Hussain",
       availableSeats: 4,
-      notes: 'Music on, friendly vibes.',
+      notes: "Music on, friendly vibes.",
     },
   ];
 
   const sortedCarpools = [...mockCarpools].sort((a, b) => {
-    if (sortBy === 'date') {
+    if (sortBy === "date") {
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     }
     return b.availableSeats - a.availableSeats;
@@ -66,14 +72,14 @@ export default function CarpoolTab() {
       <View style={styles.sortRow}>
         <Text style={styles.sortLabel}>Sort by:</Text>
         <TouchableOpacity
-          style={[styles.sortBtn, sortBy === 'date' && styles.sortActive]}
-          onPress={() => setSortBy('date')}
+          style={[styles.sortBtn, sortBy === "date" && styles.sortActive]}
+          onPress={() => setSortBy("date")}
         >
           <Text style={styles.sortText}>Date</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.sortBtn, sortBy === 'seats' && styles.sortActive]}
-          onPress={() => setSortBy('seats')}
+          style={[styles.sortBtn, sortBy === "seats" && styles.sortActive]}
+          onPress={() => setSortBy("seats")}
         >
           <Text style={styles.sortText}>Seats</Text>
         </TouchableOpacity>
@@ -116,7 +122,7 @@ export default function CarpoolTab() {
                 style={styles.chatBtn}
                 onPress={() =>
                   router.push({
-                    pathname: '/chat/[username]',
+                    pathname: "/chat/[username]",
                     params: { username: item.driver }, // 👈 pass driver name
                   })
                 }
@@ -133,51 +139,64 @@ export default function CarpoolTab() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f7fa', padding: 16 },
-  heading: { fontSize: 22, fontWeight: '700', textAlign: 'center', marginBottom: 16 },
-  sortRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  container: { flex: 1, backgroundColor: "#f5f7fa", padding: 16 },
+  heading: {
+    fontSize: 22,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  sortRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   sortLabel: { fontSize: 14, marginRight: 8 },
   sortBtn: {
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 20,
     marginRight: 8,
   },
-  sortActive: { backgroundColor: '#007AFF' },
-  sortText: { fontSize: 13, fontWeight: '600', color: '#000' },
+  sortActive: { backgroundColor: "#007AFF" },
+  sortText: { fontSize: 13, fontWeight: "600", color: "#000" },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
     elevation: 3,
   },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  tripName: { fontSize: 16, fontWeight: '600', color: '#333' },
-  date: { fontSize: 13, color: '#666' },
-  detail: { fontSize: 13, color: '#444' },
-  notes: { fontSize: 12, color: '#888', flex: 1, textAlign: 'right' },
-  btnRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  tripName: { fontSize: 16, fontWeight: "600", color: "#333" },
+  date: { fontSize: 13, color: "#666" },
+  detail: { fontSize: 13, color: "#444" },
+  notes: { fontSize: 12, color: "#888", flex: 1, textAlign: "right" },
+  btnRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
   joinBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#28a745',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#28a745",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 8,
   },
   chatBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#007AFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#007AFF",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 8,
   },
-  btnText: { color: '#fff', fontSize: 13, fontWeight: '600', marginLeft: 4 },
+  btnText: { color: "#fff", fontSize: 13, fontWeight: "600", marginLeft: 4 },
 });

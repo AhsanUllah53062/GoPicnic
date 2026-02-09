@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import { db } from "../services/firebase";
+import { db } from "../../services/firebase";
 
 type Props = {
   visible: boolean;

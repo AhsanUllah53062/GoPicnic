@@ -12,8 +12,8 @@ import {
   View,
 } from "react-native";
 import Button from "../../components/common/Button";
+import CustomPicker from "../../components/common/CustomPicker";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
-import CustomPicker from "../../components/CustomPicker";
 import { registerUser } from "../../services/auth";
 
 export default function Signup() {
