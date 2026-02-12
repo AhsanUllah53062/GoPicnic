@@ -1,80 +1,115 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+// app/(tabs)/inbox.tsx
+import MessagesView from "@/components/inbox/MessagesView";
+import NotificationsView from "@/components/inbox/NotificationsView";
+import React, { useState } from "react";
+import {
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-type InboxItem = {
-  id: string;
-  type: 'chat' | 'notification';
-  sender: string;
-  message: string;
-  timestamp: string;
-};
+type TabType = "messages" | "notifications";
 
-const mockInbox: InboxItem[] = [
-  { id: '1', type: 'notification', sender: 'Carpool', message: 'Khan wants to join your trip', timestamp: 'Sun' },
-  { id: '2', type: 'chat', sender: 'Musavir256', message: 'Hi, What’s up', timestamp: 'Fri' },
-  { id: '3', type: 'chat', sender: 'Khan345', message: 'How was your trip?', timestamp: '27-Feb-2022' },
-  { id: '4', type: 'notification', sender: 'Go-Picnic', message: 'Your booking is confirmed', timestamp: '25-Feb-2022' },
-];
-
-export default function InboxTab() {
-  const router = useRouter();
+export default function InboxScreen() {
+  const [activeTab, setActiveTab] = useState<TabType>("messages");
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Inbox</Text>
-        <MaterialIcons name="search" size={24} color="#000" />
+        <Text style={styles.headerTitle}>Inbox</Text>
       </View>
 
-      {/* List of mock messages */}
-      <FlatList
-        data={mockInbox}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.messageRow}
-            onPress={() => {
-              if (item.type === 'chat') {
-                router.push({ pathname: '/chat/[username]', params: { username: item.sender } });
-              } else {
-                router.push({ pathname: '/notification/[id]', params: { id: item.id } });
-              }
-            }}
+      {/* Segmented Control */}
+      <View style={styles.segmentedControl}>
+        <TouchableOpacity
+          style={[
+            styles.segmentButton,
+            activeTab === "messages" && styles.segmentButtonActive,
+          ]}
+          onPress={() => setActiveTab("messages")}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={[
+              styles.segmentText,
+              activeTab === "messages" && styles.segmentTextActive,
+            ]}
           >
-            <View>
-              <Text style={styles.sender}>{item.sender}</Text>
-              <Text style={styles.preview}>{item.message}</Text>
-            </View>
-            <Text style={styles.timestamp}>{item.timestamp}</Text>
-          </TouchableOpacity>
-        )}
-      />
-    </View>
+            Messages
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.segmentButton,
+            activeTab === "notifications" && styles.segmentButtonActive,
+          ]}
+          onPress={() => setActiveTab("notifications")}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={[
+              styles.segmentText,
+              activeTab === "notifications" && styles.segmentTextActive,
+            ]}
+          >
+            Notifications
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Content */}
+      {activeTab === "messages" ? <MessagesView /> : <NotificationsView />}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f7fa', padding: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+  },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "ios" ? 0 : 20,
+    paddingBottom: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
-  title: { fontSize: 20, fontWeight: '700' },
-  messageRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    borderBottomWidth: 0.5,
-    borderColor: '#ddd',
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: "800",
+    color: "#111827",
   },
-  sender: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
-  preview: { fontSize: 13, color: '#666' },
-  timestamp: { fontSize: 12, color: '#999', alignSelf: 'center' },
+  segmentedControl: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    padding: 4,
+    margin: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  segmentButtonActive: {
+    backgroundColor: "#6366F1",
+  },
+  segmentText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  segmentTextActive: {
+    color: "#fff",
+  },
 });

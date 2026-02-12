@@ -1,8 +1,9 @@
 import * as ImagePicker from "expo-image-picker";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { Alert } from "react-native";
+import app, { auth } from "./firebase";
 
-const storage = getStorage();
+const storage = getStorage(app);
 
 /**
  * Request camera permissions
@@ -51,6 +52,7 @@ export const takePhoto = async (): Promise<string | null> => {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
+      presentationStyle: "fullScreen",
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -78,6 +80,7 @@ export const pickImage = async (): Promise<string | null> => {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
+      presentationStyle: "fullScreen",
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -102,23 +105,44 @@ export const uploadImage = async (
   try {
     console.log("📤 Uploading image to:", path);
 
+    // Check authentication
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error("User not authenticated. Please log in first.");
+    }
+    console.log("✅ User authenticated:", currentUser.uid);
+
     // Fetch the image
+    console.log("📥 Fetching image from URI:", uri);
     const response = await fetch(uri);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
     const blob = await response.blob();
+    console.log("✅ Image fetched, blob size:", blob.size, "bytes");
 
     // Create storage reference
     const storageRef = ref(storage, path);
+    console.log("📍 Storage reference created for path:", path);
+    console.log("📍 Storage bucket:", storage.app.options.storageBucket);
 
     // Upload the blob
-    await uploadBytes(storageRef, blob);
+    console.log("📤 Starting upload...");
+    const uploadResult = await uploadBytes(storageRef, blob, {
+      contentType: "image/jpeg",
+    });
+    console.log("✅ Blob uploaded, metadata:", uploadResult.metadata);
 
     // Get download URL
     const downloadURL = await getDownloadURL(storageRef);
-
+    console.log("✅ Download URL obtained:", downloadURL);
     console.log("✅ Image uploaded successfully");
     return downloadURL;
   } catch (error: any) {
     console.error("❌ Error uploading image:", error);
+    console.error("❌ Error code:", error.code);
+    console.error("❌ Error message:", error.message);
+    console.error("❌ Full error object:", JSON.stringify(error));
     throw new Error(`Failed to upload image: ${error.message}`);
   }
 };

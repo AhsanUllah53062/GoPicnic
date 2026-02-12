@@ -1,14 +1,15 @@
+//services/carpool.ts
 import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    getDocs,
-    orderBy,
-    query,
-    serverTimestamp,
-    Timestamp,
-    updateDoc,
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  Timestamp,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
 

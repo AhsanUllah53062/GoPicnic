@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Allow users to upload and delete their own profile photos
+    match /users/{userId}/profile.jpg {
+      allow read: if true; // Anyone can view profile photos
+      allow create, write: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+    
+    // Allow authenticated users to upload and manage images in their trip folders
+    match /trips/{tripId}/{allFiles=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated(); // TODO: Refine to trip owners only
+      allow delete: if isAuthenticated();
+    }
+    
+    // Allow authenticated users to upload and manage cart/order images
+    match /orders/{orderId}/{allFiles=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+    
+    // Default deny for everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

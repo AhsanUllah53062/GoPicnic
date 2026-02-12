@@ -5,9 +5,6 @@ goPicnic/
 ├── 📁 app/ (Expo Router - File-based routing)
 │   ├── _layout.tsx (Root layout with all providers)
 │   ├── index.tsx (Redirect to /auth/welcome)
-│   ├── start-planning.tsx (Trip creation)
-│   ├── trip-details.tsx (Trip details page)
-│   ├── weather.tsx (Weather display)
 │   │
 │   ├── 📁 (auth)/ (Unauthenticated routes)
 │   │   ├── welcome.tsx
@@ -57,8 +54,12 @@ goPicnic/
 │   ├── 📁 place/ (Dynamic routes)
 │   │   └── [id].tsx
 │   │
-│   └── 📁 trip/ (Dynamic routes)
-│       └── [id].tsx
+│   ├── 📁 trip/ (Dynamic routes)
+│   │   └── [id].tsx
+│   │
+│   └── 📁 trip-details/ (Trip management)
+│       ├── start-planning.tsx (Trip creation form)
+│       └── trip-details.tsx (Trip details with tabs)
 │
 ├── 📁 src/
 │   └── 📁 context/ (Global state management)
@@ -67,20 +68,8 @@ goPicnic/
 │       └── CartContext.tsx (Shopping cart state)
 │
 ├── 📁 components/ (Reusable UI components)
-│   ├── CustomButton.tsx
-│   ├── CustomPicker.tsx
-│   ├── DayCard.tsx
-│   ├── SectionHeader.tsx
 │   ├── CarpoolPlaceCard.tsx
-│   ├── Gallery.tsx
-│   ├── ImageItem.tsx
-│   ├── LocationModal.tsx
 │   ├── LocationSearchModal.tsx
-│   ├── ReviewsModal.tsx
-│   ├── ExpenseEditorBottomSheet.tsx
-│   ├── TimePickerBottomSheet.tsx
-│   ├── themed-text.tsx
-│   ├── themed-view.tsx
 │   ├── index.ts (Component exports)
 │   │
 │   ├── 📁 budget/ (Budget feature)
@@ -93,20 +82,35 @@ goPicnic/
 │   │   ├── CarpoolEditorModal.tsx
 │   │   └── MeetingPointSelector.tsx
 │   │
-│   ├── 📁 common/ (Basic primitives)
+│   ├── 📁 common/ (UI Primitives & Styling)
 │   │   ├── Button.tsx
-│   │   └── LoadingSpinner.tsx
+│   │   ├── LoadingSpinner.tsx
+│   │   ├── CustomButton.tsx
+│   │   ├── CustomPicker.tsx
+│   │   ├── PageIndicator.tsx
+│   │   ├── SectionHeader.tsx
+│   │   ├── themed-text.tsx
+│   │   └── themed-view.tsx
 │   │
 │   ├── 📁 home/ (Home tab)
 │   │   ├── PlaceCard.tsx
 │   │   └── ProvinceDropdown.tsx
 │   │
 │   ├── 📁 itinerary/ (Itinerary feature)
+│   │   ├── DayCard.tsx
 │   │   ├── AddPlaceModal.tsx
 │   │   ├── PlaceVisitCard.tsx
 │   │   └── TodoItem.tsx
 │   │
-│   ├── 📁 place/ (Place details)
+│   ├── 📁 place/ (Place details UI)
+│   │   ├── Gallery.tsx
+│   │   ├── ImageItem.tsx
+│   │   ├── LocationModal.tsx
+│   │   ├── ReviewsModal.tsx
+│   │   ├── PlaceHeader.tsx
+│   │   ├── PlaceInfo.tsx
+│   │   ├── PlaceActions.tsx
+│   │   └── weather.tsx
 │   ├── 📁 overview/
 │   │
 │   ├── 📁 profile/ (Profile UI components)
@@ -177,10 +181,19 @@ goPicnic/
 ## Key Statistics
 
 - **Screen Files**: 35+ (in /app directory)
-- **Component Files**: 50+ (in /components directory)
+- **Component Files**: 45+ (in /components directory)
 - **Service Files**: 12 (in /services directory)
 - **Context Files**: 3 (in /src/context directory)
 - **Total TypeScript files**: ~100+
+
+## Recent Changes (Phase 1 Restructuring)
+
+- ✅ Moved UI primitives to `/components/common/`: CustomButton, CustomPicker, PageIndicator, SectionHeader, themed-text, themed-view
+- ✅ Moved place-related components to `/components/place/`: Gallery, ImageItem, LocationModal, ReviewsModal, weather
+- ✅ Moved DayCard to `/components/itinerary/`
+- ✅ Deleted orphaned components: TimePickerBottomSheet, ExpenseEditorBottomSheet (replaced by ExpenseEditorModal)
+- ✅ Fixed navigation paths for trip details from profile screen
+- ✅ Removed duplicate `/app/start-planning.tsx` file
 
 ## Architecture Layers
 

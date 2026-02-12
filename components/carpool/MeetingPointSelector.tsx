@@ -1,14 +1,15 @@
+//components/carpool/MeetingPointSelector.tsx
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 type Props = {

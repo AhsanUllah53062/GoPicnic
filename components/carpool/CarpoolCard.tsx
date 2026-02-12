@@ -1,11 +1,12 @@
+//components/carpool/CarpoolCard.tsx
 import { MaterialIcons } from "@expo/vector-icons";
 import {
-    Alert,
-    Share,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Carpool } from "../../services/carpool";
 

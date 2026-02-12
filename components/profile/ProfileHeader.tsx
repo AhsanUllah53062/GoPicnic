@@ -89,8 +89,12 @@ export default function ProfileHeader({
       await updateUserProfile(profile.userId, { photoURL: downloadURL });
       onPhotoUpdated?.(downloadURL);
       Alert.alert("Success", "Profile photo updated");
-    } catch (error) {
-      Alert.alert("Error", "Failed to upload photo");
+    } catch (error: any) {
+      console.error("Upload error details:", error);
+      Alert.alert(
+        "Error",
+        `Failed to upload photo: ${error?.message || "Unknown error"}`,
+      );
     } finally {
       setUploading(false);
     }

@@ -113,7 +113,7 @@ Reusable UI components in `/components`:
   - `components/tabs/`: BudgetingTab, CarpoolTab, ItineraryTab, OverviewTab, TripDetailsTabs
   - `components/ui/`: Basic UI primitives (collapsible, icon-symbol)
 
-- **Bottom Sheet Components**: ExpenseEditorBottomSheet, TimePickerBottomSheet
+- **Bottom Sheet Components**: ExpenseEditorModal (replaces orphaned TimePickerBottomSheet)
   - Use `@gorhom/bottom-sheet` v5.2.6
   - Imported in screens for modal editing
 
@@ -121,12 +121,20 @@ Reusable UI components in `/components`:
 
   ```tsx
   export { default as CustomButton } from "./common/CustomButton";
+  export { default as PageIndicator } from "./common/PageIndicator";
   ```
 
 - **Basic UI Primitives**: Organized in `components/common/` subdirectory:
-  - CustomButton, CustomPicker, PageIndicator, SectionHeader, themed-text, themed-view
+  - CustomButton, CustomPicker, PageIndicator, SectionHeader, themed-text, themed-view, Button, LoadingSpinner
   - All styling-related reusable components consolidated in one location
   - Imported via `@/components/common/*` or through `components/index.ts` exports
+
+- **Place-Related Components**: Organized in `components/place/` subdirectory:
+  - Gallery, ImageItem, LocationModal, ReviewsModal, PlaceHeader, PlaceInfo, PlaceActions, weather
+  - Used by place details screen (`app/place/[id].tsx`)
+
+- **Itinerary Components**: Organized in `components/itinerary/` subdirectory:
+  - DayCard (displays individual day in trip itinerary)
 
 ### 5. **Type Safety**
 
@@ -161,19 +169,26 @@ Pattern: All context hooks throw error if used outside provider scope.
 
 ---
 
-## Important: Unused Code to Be Deleted
+## Project Cleanup Progress
 
-The following files are **orphaned and not used anywhere** in the project. Delete them:
+**Phase 1: Completed** ✅
 
-- ❌ `app/edit-profile.tsx` - Empty file
-- ❌ `app/trip-overview.tsx` - Not referenced from any navigation
-- ❌ `app/itinerary-builder.tsx` - Abandoned prototype, no active routes
+- ❌ `app/edit-profile.tsx` - Deleted
+- ❌ `app/trip-overview.tsx` - Deleted
+- ❌ `app/itinerary-builder.tsx` - Deleted
+- ❌ `app/start-planning.tsx` (root duplicate) - Deleted
+- ❌ `components/TimePickerBottomSheet.tsx` - Deleted (unused)
+- ❌ `components/ExpenseEditorBottomSheet.tsx` - Deleted (replaced by ExpenseEditorModal)
+- ✅ UI primitives moved to `/components/common/`
+- ✅ Place components organized in `/components/place/`
+- ✅ Navigation paths corrected in profile screen
 
 Active alternatives that replaced them:
 
 - Profile editing flows through `app/(tabs)/profile.tsx` → `app/profile/details.tsx`
-- Trip details/itinerary via `app/trip/[id].tsx` with TripDetailsTabs component
-- Weather display at `app/weather.tsx` (referenced from `app/place/[id].tsx`)
+- Trip creation via `app/trip-details/start-planning.tsx`
+- Trip details/itinerary via `app/trip-details/trip-details.tsx` with TripDetailsTabs component
+- Weather display as modal component via `components/place/weather.tsx` (used in `app/place/[id].tsx`)
 
 ---
 
