@@ -1,20 +1,64 @@
+import { GlobalStyles, TypographyStyles } from "@/constants/componentStyles";
+import { Spacing } from "@/constants/styles";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, Pressable, Text, TextInput, View } from "react-native";
 import CustomButton from "../../components/common/CustomButton";
 
 export default function OtpVerification() {
   const router = useRouter();
+  const { colors, styles: themedStyles } = useThemedStyles();
   const [otp, setOtp] = useState(["", "", "", ""]);
   const inputs = useRef<(TextInput | null)[]>([]); // ✅ Correct typing
+
+  const styles = {
+    container: {
+      flex: 1,
+      ...GlobalStyles.screenContainer,
+      paddingHorizontal: Spacing.gutter,
+      paddingTop: Spacing.xxl,
+    },
+    backIcon: {
+      marginBottom: Spacing.lg,
+    },
+    title: {
+      ...TypographyStyles.h2,
+      marginBottom: Spacing.md,
+    },
+    subtitle: {
+      ...TypographyStyles.body,
+      marginBottom: Spacing.xl,
+      lineHeight: 22,
+    },
+    otpContainer: {
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      marginBottom: Spacing.xl,
+    },
+    otpInput: {
+      borderWidth: 1,
+      borderRadius: 8,
+      width: 60,
+      height: 60,
+      textAlign: "center" as const,
+      fontSize: 22,
+    },
+    buttonWrapper: {
+      alignItems: "center" as const,
+    },
+    footer: {
+      marginTop: Spacing.xxl,
+      flexDirection: "row" as const,
+      justifyContent: "center" as const,
+    },
+    resendText: {
+      ...TypographyStyles.label,
+      color: colors.primary,
+      fontWeight: "600" as const,
+    },
+  };
 
   const handleChange = (text: string, index: number) => {
     const newOtp = [...otp];
@@ -49,16 +93,18 @@ export default function OtpVerification() {
       <MaterialIcons
         name="arrow-back"
         size={24}
-        color="black"
+        color={colors.text.primary}
         style={styles.backIcon}
         onPress={() => router.back()}
       />
 
       {/* Title */}
-      <Text style={styles.title}>OTP Verification</Text>
+      <Text style={[styles.title, { color: colors.text.primary }]}>
+        OTP Verification
+      </Text>
 
       {/* Subtitle */}
-      <Text style={styles.subtitle}>
+      <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
         Enter the verification code we just sent to your email address.
       </Text>
 
@@ -70,7 +116,10 @@ export default function OtpVerification() {
             ref={(el) => {
               inputs.current[index] = el; // ✅ No return value, just assignment
             }}
-            style={styles.otpInput}
+            style={[
+              styles.otpInput,
+              { borderColor: colors.border.light, color: colors.text.primary },
+            ]}
             keyboardType="numeric"
             maxLength={1}
             value={digit}
@@ -101,55 +150,3 @@ export default function OtpVerification() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 30,
-    paddingTop: 60,
-  },
-  backIcon: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    marginBottom: 15,
-    color: "#000",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 30,
-    lineHeight: 22,
-  },
-  otpContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 30,
-  },
-  otpInput: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    width: 60,
-    height: 60,
-    textAlign: "center",
-    fontSize: 22,
-    color: "#000",
-  },
-  buttonWrapper: {
-    alignItems: "center",
-  },
-  footer: {
-    marginTop: 40,
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  resendText: {
-    fontSize: 16,
-    color: "#007bff",
-    fontWeight: "500",
-  },
-});

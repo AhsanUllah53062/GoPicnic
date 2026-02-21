@@ -1,11 +1,13 @@
 // app/(tabs)/inbox.tsx
 import MessagesView from "@/components/inbox/MessagesView";
 import NotificationsView from "@/components/inbox/NotificationsView";
+import { TypographyStyles } from "@/constants/componentStyles";
+import { Spacing } from "@/constants/styles";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import React, { useState } from "react";
 import {
   Platform,
   SafeAreaView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -14,7 +16,52 @@ import {
 type TabType = "messages" | "notifications";
 
 export default function InboxScreen() {
+  const { colors } = useThemedStyles();
   const [activeTab, setActiveTab] = useState<TabType>("messages");
+
+  const styles = {
+    container: {
+      flex: 1,
+      backgroundColor: colors.neutral[50],
+    },
+    header: {
+      paddingHorizontal: Spacing.md,
+      paddingTop: Platform.OS === "ios" ? 0 : Spacing.md,
+      paddingBottom: Spacing.md,
+      backgroundColor: colors.neutral.white,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border.light,
+    },
+    headerTitle: {
+      ...TypographyStyles.h1,
+      color: colors.text.primary,
+    },
+    segmentedControl: {
+      flexDirection: "row" as const,
+      backgroundColor: colors.neutral.white,
+      padding: Spacing.xs,
+      margin: Spacing.md,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border.light,
+    },
+    segmentButton: {
+      flex: 1,
+      paddingVertical: Spacing.sm,
+      alignItems: "center" as const,
+      borderRadius: 8,
+    },
+    segmentButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    segmentText: {
+      ...TypographyStyles.label,
+      color: colors.text.secondary,
+    },
+    segmentTextActive: {
+      color: colors.neutral.white,
+    },
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -67,49 +114,3 @@ export default function InboxScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === "ios" ? 0 : 20,
-    paddingBottom: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  segmentedControl: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    padding: 4,
-    margin: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  segmentButton: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-    borderRadius: 8,
-  },
-  segmentButtonActive: {
-    backgroundColor: "#6366F1",
-  },
-  segmentText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  segmentTextActive: {
-    color: "#fff",
-  },
-});

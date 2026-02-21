@@ -1,11 +1,101 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useCart } from '../../src/context/CartContext';
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import {
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import { Spacing } from "../../constants/styles";
+import { useThemedStyles } from "../../hooks/useThemedStyles";
+import { useCart } from "../../src/context/CartContext";
 
 export default function CartScreen() {
   const { cartItems, updateQuantity, removeFromCart, total } = useCart();
   const router = useRouter();
+  const { styles: themedStyles, colors } = useThemedStyles();
+
+  const styles = StyleSheet.create({
+    container: {
+      ...themedStyles.global.screenContainer,
+      paddingHorizontal: Spacing.gutter,
+    },
+    title: {
+      fontSize: themedStyles.typography.h2.fontSize,
+      fontWeight: themedStyles.typography.h2.fontWeight,
+      color: themedStyles.typography.h2.color,
+      marginBottom: Spacing.lg,
+    },
+    itemRow: {
+      flexDirection: "row" as const,
+      alignItems: "center",
+      marginBottom: Spacing.md,
+      paddingBottom: Spacing.md,
+      borderBottomColor: colors.border.light,
+      borderBottomWidth: 1,
+    },
+    image: {
+      width: 80,
+      height: 80,
+      borderRadius: 8,
+      marginRight: Spacing.md,
+    },
+    info: {
+      flex: 1,
+    },
+    name: {
+      fontSize: themedStyles.typography.body.fontSize,
+      fontWeight: themedStyles.typography.body.fontWeight,
+      color: themedStyles.typography.body.color,
+      marginBottom: 4,
+    },
+    price: {
+      fontSize: themedStyles.typography.bodySmall.fontSize,
+      fontWeight: themedStyles.typography.bodySmall.fontWeight,
+      color: themedStyles.typography.bodySmall.color,
+    },
+    qtyRow: {
+      flexDirection: "row" as const,
+      alignItems: "center",
+      marginTop: Spacing.sm,
+    },
+    qty: {
+      marginHorizontal: Spacing.sm,
+      color: colors.text.primary,
+    },
+    empty: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    footer: {
+      borderTopColor: colors.border.light,
+      borderTopWidth: 1,
+      paddingTop: Spacing.lg,
+      paddingBottom: Spacing.lg,
+    },
+    total: {
+      fontSize: themedStyles.typography.h4.fontSize,
+      fontWeight: themedStyles.typography.h4.fontWeight,
+      color: themedStyles.typography.h4.color,
+      marginBottom: Spacing.md,
+    },
+    checkoutBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.lg,
+      alignItems: "center",
+      marginTop: Spacing.md,
+    },
+    checkoutText: {
+      color: colors.text.inverse,
+      fontSize: themedStyles.typography.body.fontSize,
+      fontWeight: themedStyles.typography.body.fontWeight,
+    },
+  });
 
   return (
     <View style={styles.container}>
@@ -23,17 +113,25 @@ export default function CartScreen() {
 
               <View style={styles.qtyRow}>
                 <TouchableOpacity onPress={() => updateQuantity(item.id, -1)}>
-                  <Ionicons name="remove-circle-outline" size={22} color="#007AFF" />
+                  <Ionicons
+                    name="remove-circle-outline"
+                    size={22}
+                    color={colors.primary}
+                  />
                 </TouchableOpacity>
                 <Text style={styles.qty}>{item.quantity}</Text>
                 <TouchableOpacity onPress={() => updateQuantity(item.id, 1)}>
-                  <Ionicons name="add-circle-outline" size={22} color="#007AFF" />
+                  <Ionicons
+                    name="add-circle-outline"
+                    size={22}
+                    color={colors.primary}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
 
             <TouchableOpacity onPress={() => removeFromCart(item.id)}>
-              <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+              <Ionicons name="trash-outline" size={22} color={colors.error} />
             </TouchableOpacity>
           </View>
         )}
@@ -50,7 +148,7 @@ export default function CartScreen() {
           <Text style={styles.total}>Total: PKR {total}</Text>
           <TouchableOpacity
             style={styles.checkoutBtn}
-            onPress={() => router.push('/shop/checkout')} // ✅ navigate to checkout
+            onPress={() => router.push("/shop/checkout")}
           >
             <Text style={styles.checkoutText}>Checkout</Text>
           </TouchableOpacity>
@@ -59,37 +157,3 @@ export default function CartScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
-  title: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    padding: 10,
-  },
-  image: { width: 60, height: 60, borderRadius: 8, marginRight: 12 },
-  info: { flex: 1 },
-  name: { fontSize: 14, fontWeight: '600', marginBottom: 4 },
-  price: { fontSize: 13, color: '#007AFF', marginBottom: 6 },
-  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  qty: { fontSize: 14, fontWeight: '600', marginHorizontal: 6 },
-  footer: {
-    borderTopWidth: 1,
-    borderColor: '#eee',
-    paddingTop: 12,
-    marginTop: 'auto',
-  },
-  total: { fontSize: 16, fontWeight: '700', marginBottom: 12 },
-  checkoutBtn: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  checkoutText: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  empty: { alignItems: 'center', marginTop: 40 },
-});

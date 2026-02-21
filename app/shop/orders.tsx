@@ -1,8 +1,20 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useCart } from '../../src/context/CartContext';
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React from "react";
+import {
+    FlatList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import {
+    Colors,
+    GlobalStyles,
+    Spacing,
+    TypographyStyles,
+} from "../../constants/styles";
+import { useCart } from "../../src/context/CartContext";
 
 export default function OrdersScreen() {
   const router = useRouter();
@@ -36,11 +48,11 @@ export default function OrdersScreen() {
             <Text
               style={[
                 styles.status,
-                item.status === 'Delivered'
+                item.status === "Delivered"
                   ? styles.delivered
-                  : item.status === 'Shipped'
-                  ? styles.shipped
-                  : styles.processing,
+                  : item.status === "Shipped"
+                    ? styles.shipped
+                    : styles.processing,
               ]}
             >
               {item.status}
@@ -58,24 +70,28 @@ export default function OrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
-  backBtn: { marginBottom: 10 },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 16 },
+  container: {
+    ...GlobalStyles.screenContainer,
+    backgroundColor: Colors.neutral.white,
+    padding: Spacing.md,
+  },
+  backBtn: { marginBottom: Spacing.sm },
+  title: { ...TypographyStyles.h2, marginBottom: Spacing.md },
   orderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
-    borderColor: '#eee',
+    borderColor: Colors.border.light,
   },
   orderInfo: { flex: 1 },
-  orderId: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
-  orderDate: { fontSize: 13, color: '#555' },
-  tracking: { fontSize: 13, color: '#007AFF', marginTop: 2 },
-  status: { fontSize: 14, fontWeight: '600' },
-  delivered: { color: '#4CAF50' },
-  shipped: { color: '#007AFF' },
-  processing: { color: '#FF9500' },
-  empty: { alignItems: 'center', marginTop: 40 },
+  orderId: { ...TypographyStyles.h4, marginBottom: Spacing.xs },
+  orderDate: { fontSize: 13, color: Colors.text.secondary },
+  tracking: { fontSize: 13, color: Colors.primary, marginTop: Spacing.xs },
+  status: { ...TypographyStyles.label },
+  delivered: { color: Colors.success },
+  shipped: { color: Colors.primary },
+  processing: { color: Colors.accent },
+  empty: { alignItems: "center", marginTop: Spacing.xl },
 });

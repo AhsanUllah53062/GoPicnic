@@ -13,29 +13,24 @@ service firebase.storage {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Allow users to upload and delete their own profile photos
-    match /users/{userId}/profile.jpg {
-      allow read: if true; // Anyone can view profile photos
-      allow create, write: if isOwner(userId);
-      allow delete: if isOwner(userId);
+    // User profile photos are publicly readable
+    match /users/{userId}/profile/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(userId);
     }
     
-    // Allow authenticated users to upload and manage images in their trip folders
-    match /trips/{tripId}/{allFiles=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated(); // TODO: Refine to trip owners only
-      allow delete: if isAuthenticated();
+    // All other user files require ownership
+    match /users/{userId}/{restOfPath=**} {
+      allow read, write: if isOwner(userId);
     }
     
-    // Allow authenticated users to upload and manage cart/order images
-    match /orders/{orderId}/{allFiles=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-      allow delete: if isAuthenticated();
+    // Trip-related files - authenticated users only
+    match /trips/{tripId}/{restOfPath=**} {
+      allow read, write: if isAuthenticated();
     }
     
-    // Default deny for everything else
-    match /{allPaths=**} {
+    // Deny everything else by default
+    match /{anything=**} {
       allow read, write: if false;
     }
   }

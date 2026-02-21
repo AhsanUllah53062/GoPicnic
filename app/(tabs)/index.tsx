@@ -1,14 +1,42 @@
+// app/(tabs)/index.tsx
+import { GlobalStyles, TypographyStyles } from "@/constants/componentStyles";
+import { Spacing } from "@/constants/styles";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { useEffect, useState } from "react";
-import { FlatList, Image, StyleSheet, Text, View } from "react-native";
+import { FlatList, Image, Text, View } from "react-native";
 import SectionHeader from "../../components/common/SectionHeader";
 import PlaceCard from "../../components/home/PlaceCard";
 import ProvinceDropdown from "../../components/home/ProvinceDropdown";
 import { fetchPlaces, Place } from "../../services/places";
 
 export default function Home() {
+  const { colors } = useThemedStyles();
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProvince, setSelectedProvince] = useState("all");
+
+  const styles = {
+    container: {
+      ...GlobalStyles.screenContainer,
+      paddingHorizontal: Spacing.md,
+      paddingTop: Spacing.xl,
+    },
+    header: {
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      alignItems: "center" as const,
+    },
+    logo: { width: 40, height: 40 },
+    loadingContainer: {
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+      ...GlobalStyles.screenContainer,
+    },
+    loadingText: {
+      ...TypographyStyles.label,
+      color: colors.text.primary,
+    },
+  };
 
   useEffect(() => {
     const loadPlaces = async () => {
@@ -90,25 +118,3 @@ export default function Home() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingTop: 40,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  logo: { width: 40, height: 40 },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  loadingText: { color: "#000", fontSize: 16 },
-});

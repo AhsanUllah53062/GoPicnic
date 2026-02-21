@@ -2,13 +2,20 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import {
+    BorderRadius,
+    Colors,
+    GlobalStyles,
+    Spacing,
+    TypographyStyles,
+} from "../../constants/styles";
 import { db } from "../../services/firebase";
 
 import Gallery from "../../components/place/Gallery";
@@ -129,28 +136,30 @@ export default function PlaceDetails() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: {
+    ...GlobalStyles.screenContainer,
+    backgroundColor: Colors.neutral.white,
+  },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 12,
-    color: "#000",
-    paddingHorizontal: 16,
+    ...TypographyStyles.h3,
+    marginBottom: Spacing.md,
+    color: Colors.text.primary,
+    paddingHorizontal: Spacing.md,
   },
   gallerySection: {
-    marginTop: 24,
-    marginBottom: 16,
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.md,
   },
-  buttonContainer: { marginBottom: 40, paddingHorizontal: 16 },
+  buttonContainer: { marginBottom: Spacing.xl, paddingHorizontal: Spacing.md },
   primaryBtn: {
-    backgroundColor: "#000",
-    paddingVertical: 16,
-    borderRadius: 10,
+    backgroundColor: Colors.text.primary,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.md,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: Colors.shadow,
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 3,
   },
-  primaryBtnText: { color: "#fff", fontSize: 17, fontWeight: "bold" },
+  primaryBtnText: { color: Colors.neutral.white, ...TypographyStyles.label },
 });

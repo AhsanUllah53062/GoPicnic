@@ -1,28 +1,25 @@
 // components/inbox/MessagesView.tsx
+import { getUserConversations, searchConversations } from "@/services/messages";
+import { useUser } from "@/src/context/UserContext";
+import { Conversation } from "@/types/inbox-types";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { Conversation } from "@/types/inbox-types";
-import { useUser } from "@/src/context/UserContext";
-import {
-  getUserConversations,
-  searchConversations,
-} from "@/services/messages";
 import ConversationCard from "./ConversationCard";
 
 export default function MessagesView() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isAuthVerified } = useUser();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [filteredConversations, setFilteredConversations] = useState<
@@ -33,10 +30,11 @@ export default function MessagesView() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    // Only load conversations after Firebase auth is verified
+    if (user && isAuthVerified) {
       loadConversations();
     }
-  }, [user]);
+  }, [user, isAuthVerified]);
 
   useEffect(() => {
     // Filter conversations based on search query
@@ -54,10 +52,10 @@ export default function MessagesView() {
     try {
       setLoading(true);
       const convos = await getUserConversations(user.id);
-      
+
       // Filter out archived conversations by default
       const activeConvos = convos.filter((c) => !c.archived);
-      
+
       setConversations(activeConvos);
       setFilteredConversations(activeConvos);
     } catch (error) {

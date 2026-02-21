@@ -1,5 +1,7 @@
-import { Picker } from '@react-native-picker/picker';
-import { StyleSheet, View } from 'react-native';
+import { InputStyles } from "@/constants/componentStyles";
+import { Colors, Spacing } from "@/constants/styles";
+import { Picker } from "@react-native-picker/picker";
+import { StyleSheet, View } from "react-native";
 
 type PickerItem = {
   label: string;
@@ -12,7 +14,11 @@ type Props = {
   items: PickerItem[];
 };
 
-export default function CustomPicker({ selectedValue, onValueChange, items }: Props) {
+export default function CustomPicker({
+  selectedValue,
+  onValueChange,
+  items,
+}: Props) {
   return (
     <View style={styles.container}>
       <Picker
@@ -30,13 +36,11 @@ export default function CustomPicker({ selectedValue, onValueChange, items }: Pr
 
 const styles = StyleSheet.create({
   container: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    marginTop: 16,
+    ...InputStyles.baseInput,
+    marginTop: Spacing.md,
   },
   picker: {
     height: 50,
-    color: '#000',
+    color: Colors.text.primary,
   },
 });

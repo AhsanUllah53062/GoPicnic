@@ -1,34 +1,102 @@
-import { Ionicons } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useThemedStyles } from "@/hooks/useThemedStyles";
+import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
     FlatList,
-    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View,
-} from 'react-native';
-import { useCart } from '../../src/context/CartContext';
+} from "react-native";
+import {
+    GlobalStyles,
+    InputStyles,
+    Spacing,
+    TypographyStyles,
+} from "../../constants/styles";
+import { useCart } from "../../src/context/CartContext";
 
 export default function CheckoutScreen() {
   const { cartItems, updateQuantity, total, addOrder, clearCart } = useCart();
   const router = useRouter();
+  const { colors } = useThemedStyles();
 
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [phone, setPhone] = useState('');
-  const [trackingId] = useState(`TRK${Math.floor(100000 + Math.random() * 900000)}`);
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [trackingId] = useState(
+    `TRK${Math.floor(100000 + Math.random() * 900000)}`,
+  );
+
+  const styles = {
+    container: {
+      ...GlobalStyles.screenContainer,
+      backgroundColor: colors.neutral.white,
+      padding: Spacing.md,
+    },
+    backBtn: { marginBottom: Spacing.sm },
+    title: { ...TypographyStyles.h2, marginBottom: Spacing.md },
+    sectionTitle: { ...TypographyStyles.h4, marginVertical: Spacing.md },
+    itemRow: {
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      alignItems: "center" as const,
+      marginVertical: Spacing.sm,
+    },
+    itemName: { flex: 1, fontSize: 14, color: colors.text.primary },
+    qtyRow: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: Spacing.sm,
+    },
+    qty: { fontSize: 14, fontWeight: "600" as const },
+    itemPrice: {
+      fontSize: 14,
+      fontWeight: "600" as const,
+      color: colors.primary,
+    },
+    total: {
+      fontSize: 16,
+      fontWeight: "600" as const,
+      marginTop: Spacing.lg,
+      color: colors.text.primary,
+    },
+    input: {
+      ...InputStyles.baseInput,
+      marginVertical: Spacing.sm,
+      color: colors.text.primary,
+    },
+    trackingRow: {
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      alignItems: "center" as const,
+      marginVertical: Spacing.md,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: colors.border.light,
+      borderRadius: 8,
+    },
+    trackingText: { flex: 1, fontSize: 14, color: colors.text.primary },
+    payBtn: {
+      backgroundColor: colors.primary,
+      paddingVertical: Spacing.lg,
+      borderRadius: 8,
+      alignItems: "center" as const,
+      marginTop: Spacing.xl,
+    },
+    payText: { color: colors.neutral.white, ...TypographyStyles.label },
+  };
 
   const copyTrackingId = () => {
     Clipboard.setStringAsync(trackingId);
-    alert('Tracking ID copied!');
+    alert("Tracking ID copied!");
   };
 
   const handleProceedToPayment = () => {
     if (!name || !address || !phone) {
-      alert('Please fill all shipping information');
+      alert("Please fill all shipping information");
       return;
     }
 
@@ -37,8 +105,8 @@ export default function CheckoutScreen() {
       id: orderId,
       items: cartItems,
       total,
-      date: new Date().toISOString().split('T')[0],
-      status: 'Processing' as 'Processing',
+      date: new Date().toISOString().split("T")[0],
+      status: "Processing" as "Processing",
       shipping: { name, address, phone },
       trackingId,
     };
@@ -50,7 +118,7 @@ export default function CheckoutScreen() {
     clearCart();
 
     // Navigate to payment screen
-    router.push('/shop/payment');
+    router.push("/shop/payment");
   };
 
   return (
@@ -72,17 +140,25 @@ export default function CheckoutScreen() {
             <Text style={styles.itemName}>{item.name}</Text>
             <View style={styles.qtyRow}>
               <TouchableOpacity onPress={() => updateQuantity(item.id, -1)}>
-                <Ionicons name="remove-circle-outline" size={22} color="#007AFF" />
+                <Ionicons
+                  name="remove-circle-outline"
+                  size={22}
+                  color="#007AFF"
+                />
               </TouchableOpacity>
               <Text style={styles.qty}>{item.quantity}</Text>
               <TouchableOpacity onPress={() => updateQuantity(item.id, 1)}>
                 <Ionicons name="add-circle-outline" size={22} color="#007AFF" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.itemPrice}>PKR {item.price * item.quantity}</Text>
+            <Text style={styles.itemPrice}>
+              PKR {item.price * item.quantity}
+            </Text>
           </View>
         )}
-        ListFooterComponent={<Text style={styles.total}>Total: PKR {total}</Text>}
+        ListFooterComponent={
+          <Text style={styles.total}>Total: PKR {total}</Text>
+        }
       />
 
       {/* Shipping Info */}
@@ -122,43 +198,3 @@ export default function CheckoutScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
-  backBtn: { marginBottom: 10 },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', marginTop: 20, marginBottom: 8 },
-  itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  itemName: { fontSize: 14, flex: 1 },
-  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  qty: { fontSize: 14, fontWeight: '600', marginHorizontal: 6 },
-  itemPrice: { fontSize: 14, fontWeight: '600', color: '#007AFF' },
-  total: { fontSize: 16, fontWeight: '700', marginTop: 10 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
-  },
-  trackingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-    gap: 8,
-  },
-  trackingText: { fontSize: 14, fontWeight: '600', color: '#333' },
-  payBtn: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  payText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});

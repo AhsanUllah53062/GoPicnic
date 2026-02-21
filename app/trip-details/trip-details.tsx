@@ -1,16 +1,22 @@
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  ImageBackground,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ImageBackground,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import TripDetailsTabs from "../../components/tabs/TripDetailsTabs";
+import {
+    GlobalStyles,
+    Spacing,
+    TypographyStyles,
+} from "../../constants/styles";
 import { getTrip, Trip } from "../../services/trips";
 import { useUser } from "../../src/context/UserContext";
 
@@ -18,10 +24,82 @@ export default function TripDetails() {
   const router = useRouter();
   const { user } = useUser();
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
+  const { colors } = useThemedStyles();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState<Date[]>([]);
+
+  const styles = {
+    container: {
+      flex: 1,
+      backgroundColor: colors.neutral.white,
+    },
+    loadingContainer: {
+      ...GlobalStyles.screenContainer,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+      backgroundColor: colors.neutral.white,
+    },
+    loadingText: {
+      marginTop: Spacing.md,
+      ...TypographyStyles.body,
+      color: colors.text.secondary,
+    },
+    errorContainer: {
+      ...GlobalStyles.screenContainer,
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
+      backgroundColor: colors.neutral.white,
+      padding: Spacing.xl,
+    },
+    errorText: {
+      marginTop: Spacing.md,
+      ...TypographyStyles.h4,
+      color: colors.error,
+    },
+    headerImage: {
+      width: "100%" as const,
+      height: 280,
+      justifyContent: "flex-end" as const,
+    },
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0,0,0,0.55)",
+    },
+    topBar: {
+      position: "absolute" as const,
+      top: 40,
+      left: Spacing.md,
+      right: Spacing.md,
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      zIndex: 2,
+    },
+    headerContent: {
+      paddingHorizontal: Spacing.md,
+      paddingBottom: Spacing.md,
+      zIndex: 2,
+    },
+    tripTitle: {
+      ...TypographyStyles.h1,
+      color: colors.neutral.white,
+      marginBottom: Spacing.xs,
+    },
+    tripDates: {
+      ...TypographyStyles.body,
+      color: colors.neutral[200],
+      marginBottom: Spacing.xs,
+    },
+    tripBudget: {
+      ...TypographyStyles.label,
+      color: colors.neutral.white,
+    },
+    content: {
+      flex: 1,
+      backgroundColor: colors.neutral.white,
+    },
+  };
 
   useEffect(() => {
     loadTrip();
@@ -144,77 +222,3 @@ export default function TripDetails() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: "#8E8E93",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 40,
-  },
-  errorText: {
-    marginTop: 16,
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FF3B30",
-  },
-  headerImage: {
-    width: "100%",
-    height: 280,
-    justifyContent: "flex-end",
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.55)",
-  },
-  topBar: {
-    position: "absolute",
-    top: 40,
-    left: 20,
-    right: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    zIndex: 2,
-  },
-  headerContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    zIndex: 2,
-  },
-  tripTitle: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#fff",
-    marginBottom: 6,
-  },
-  tripDates: {
-    fontSize: 15,
-    color: "#E5E5EA",
-    marginBottom: 4,
-  },
-  tripBudget: {
-    fontSize: 15,
-    color: "#fff",
-    fontWeight: "600",
-  },
-  content: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-});

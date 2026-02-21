@@ -1,3 +1,4 @@
+// types.ts
 import { ImageSourcePropType } from "react-native";
 
 export type Place = {
@@ -28,4 +29,64 @@ export type Trip = {
   status: "planning" | "active" | "completed";
   createdAt?: Date;
   updatedAt?: Date;
+};
+
+// ─── Preferences Types ───────────────────────────────────────────────────────
+
+export type TerrainType =
+  | "mountains"
+  | "beach"
+  | "forest"
+  | "urban"
+  | "desert"
+  | "countryside";
+
+export type AmenityType =
+  | "parking"
+  | "restrooms"
+  | "picnic-area"
+  | "playground"
+  | "restaurant"
+  | "shops";
+
+export type CarpoolVibeType =
+  | "no-smoking"
+  | "music-lover"
+  | "quiet-ride"
+  | "chatty"
+  | "pets-ok"
+  | "ac-preference";
+
+export type UserPreferences = {
+  places: {
+    terrain: TerrainType[];
+    maxDistance: number;
+    amenities: AmenityType[];
+  };
+  weather: {
+    idealTemp: { min: number; max: number };
+    rainAlerts: boolean;
+  };
+  people: {
+    maxGroupSize: number;
+    friendsOnlyCarpooling: boolean;
+  };
+  carpoolVibes: CarpoolVibeType[];
+};
+
+export const DEFAULT_PREFERENCES: UserPreferences = {
+  places: {
+    terrain: [],
+    maxDistance: 100,
+    amenities: [],
+  },
+  weather: {
+    idealTemp: { min: 15, max: 30 },
+    rainAlerts: false,
+  },
+  people: {
+    maxGroupSize: 10,
+    friendsOnlyCarpooling: false,
+  },
+  carpoolVibes: [],
 };

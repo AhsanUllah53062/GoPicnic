@@ -1,9 +1,12 @@
+// services/profile.ts
+import type { UserPreferences } from "@/types";
 import {
+    collection,
     doc,
     getDoc,
     serverTimestamp,
     setDoc,
-    updateDoc
+    updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -24,23 +27,6 @@ export type EmergencyContact = {
   phone: string;
 };
 
-export type UserPreferences = {
-  places: {
-    terrain: string[];
-    maxDistance: number;
-    amenities: string[];
-  };
-  weather: {
-    idealTemp: { min: number; max: number };
-    rainAlerts: boolean;
-  };
-  people: {
-    maxGroupSize: number;
-    friendsOnlyCarpooling: boolean;
-  };
-  carpoolVibes: string[];
-};
-
 export type UserProfile = {
   userId: string;
   displayName: string;
@@ -52,7 +38,6 @@ export type UserProfile = {
   joinedDate: Date;
   trustBadges: TrustBadge[];
 
-  // Stats
   stats: {
     tripsCompleted: number;
     carpoolMiles: number;
@@ -60,16 +45,14 @@ export type UserProfile = {
     driverRating: number;
   };
 
-  // Collections
-  favoritePlaces: string[]; // Place IDs
-  friends: string[]; // User IDs
+  favoritePlaces: string[];
+  friends: string[];
   gearInventory: GearItem[];
   emergencyContacts: EmergencyContact[];
 
-  // Preferences
-  preferences: UserPreferences;
+  // Preferences stored inline on the profile doc (fast reads)
+  preferences?: UserPreferences;
 
-  // Documents (URLs)
   documents: {
     parkPasses?: string[];
     idCard?: string;
@@ -81,8 +64,10 @@ export type UserProfile = {
   updatedAt?: Date;
 };
 
+// ─── Profile CRUD ──────────────────────────────────────────────────────────────
+
 /**
- * Get user profile
+ * Get user profile with default values for missing fields
  */
 export const getUserProfile = async (
   userId: string,
@@ -96,8 +81,27 @@ export const getUserProfile = async (
     if (profileSnap.exists()) {
       const data = profileSnap.data();
       return {
-        ...data,
+        userId: data.userId || userId,
+        displayName: data.displayName || "",
+        email: data.email || "",
+        phone: data.phone,
+        address: data.address,
+        photoURL: data.photoURL,
+        bio: data.bio,
         joinedDate: data.joinedDate?.toDate() || new Date(),
+        trustBadges: data.trustBadges || ["email"],
+        stats: {
+          tripsCompleted: data.stats?.tripsCompleted || 0,
+          carpoolMiles: data.stats?.carpoolMiles || 0,
+          seatsOffered: data.stats?.seatsOffered || 0,
+          driverRating: data.stats?.driverRating || 0,
+        },
+        favoritePlaces: data.favoritePlaces || [],
+        friends: data.friends || [],
+        gearInventory: data.gearInventory || [],
+        emergencyContacts: data.emergencyContacts || [],
+        preferences: data.preferences,
+        documents: data.documents || {},
         createdAt: data.createdAt?.toDate(),
         updatedAt: data.updatedAt?.toDate(),
       } as UserProfile;
@@ -124,14 +128,12 @@ export const saveUserProfile = async (
     const existingProfile = await getDoc(profileRef);
 
     if (existingProfile.exists()) {
-      // Update existing
       await updateDoc(profileRef, {
         ...profile,
         updatedAt: serverTimestamp(),
       });
       console.log("✅ Profile updated");
     } else {
-      // Create new
       await setDoc(profileRef, {
         ...profile,
         joinedDate: serverTimestamp(),
@@ -157,14 +159,95 @@ export const updateUserProfile = async (
     console.log("📝 Updating profile fields:", userId);
 
     const profileRef = doc(db, "userProfiles", userId);
-    await updateDoc(profileRef, {
-      ...updates,
-      updatedAt: serverTimestamp(),
-    });
+    await setDoc(
+      profileRef,
+      {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
 
     console.log("✅ Profile fields updated");
   } catch (error: any) {
     console.error("❌ Error updating profile:", error);
     throw new Error(`Failed to update profile: ${error.message}`);
+  }
+};
+
+// ─── Preferences Subcollection ─────────────────────────────────────────────────
+//
+//  Path: users/{userId}/preferences/{userId}
+//  One document per user — the doc ID equals the userId for easy reads.
+
+/**
+ * Fetch user preferences from Firestore subcollection.
+ * Returns null if the document does not yet exist.
+ */
+export const getUserPreferences = async (
+  userId: string,
+): Promise<UserPreferences | null> => {
+  try {
+    console.log("🔍 Fetching preferences for user:", userId);
+
+    const prefsRef = doc(
+      collection(db, "users", userId, "preferences"),
+      userId,
+    );
+    const prefsSnap = await getDoc(prefsRef);
+
+    if (prefsSnap.exists()) {
+      console.log("✅ Preferences found");
+      return prefsSnap.data() as UserPreferences;
+    }
+
+    console.log("⚠️ No preferences document — user will see defaults");
+    return null;
+  } catch (error: any) {
+    console.error("❌ Error fetching preferences:", error);
+    throw new Error(`Failed to fetch preferences: ${error.message}`);
+  }
+};
+
+/**
+ * Persist user preferences to Firestore subcollection.
+ * Uses setDoc (merge: true) so it creates or overwrites cleanly.
+ */
+export const saveUserPreferences = async (
+  userId: string,
+  preferences: UserPreferences,
+): Promise<void> => {
+  try {
+    console.log("💾 Saving preferences for user:", userId);
+
+    // Write to subcollection: users/{userId}/preferences/{userId}
+    const prefsRef = doc(
+      collection(db, "users", userId, "preferences"),
+      userId,
+    );
+    await setDoc(
+      prefsRef,
+      {
+        ...preferences,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+
+    // Also mirror a lightweight copy on the main profile doc so other
+    // features can read them without an extra subcollection fetch.
+    const profileRef = doc(db, "userProfiles", userId);
+    const profileSnap = await getDoc(profileRef);
+    if (profileSnap.exists()) {
+      await updateDoc(profileRef, {
+        preferences,
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    console.log("✅ Preferences saved");
+  } catch (error: any) {
+    console.error("❌ Error saving preferences:", error);
+    throw new Error(`Failed to save preferences: ${error.message}`);
   }
 };

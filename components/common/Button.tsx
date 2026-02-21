@@ -1,26 +1,44 @@
+import { ButtonStyles, Colors } from "@/constants/componentStyles";
 import React from "react";
 import { Pressable, StyleSheet, Text, ViewStyle } from "react-native";
 
 type ButtonProps = {
   title: string;
   onPress: () => void;
-  filled?: boolean; // true = solid background, false = outline
-  style?: ViewStyle; // allow custom styles
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "small" | "medium" | "large";
+  disabled?: boolean;
+  style?: ViewStyle;
 };
 
 export default function Button({
   title,
   onPress,
-  filled = false,
+  variant = "primary",
+  size = "medium",
+  disabled = false,
   style,
 }: ButtonProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.base, filled ? styles.filled : styles.outline, style]}
+      disabled={disabled}
+      style={({ pressed }) => [
+        ButtonStyles.baseButton,
+        ButtonStyles[variant],
+        ButtonStyles[size],
+        disabled && ButtonStyles.disabled,
+        pressed && { opacity: 0.8 },
+        style,
+      ]}
     >
       <Text
-        style={[styles.text, filled ? styles.filledText : styles.outlineText]}
+        style={[
+          ButtonStyles.buttonText,
+          variant === "outline" || variant === "ghost"
+            ? { color: Colors.primary }
+            : { color: Colors.neutral.white },
+        ]}
       >
         {title}
       </Text>
@@ -29,6 +47,7 @@ export default function Button({
 }
 
 const styles = StyleSheet.create({
+  // Kept for backward compatibility - styles from ButtonStyles are used above
   base: {
     paddingVertical: 12,
     paddingHorizontal: 20,

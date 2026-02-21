@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
     Image,
     ScrollView,
@@ -8,8 +8,15 @@ import {
     Text,
     TouchableOpacity,
     View,
-} from 'react-native';
-import { useCart } from '../../src/context/CartContext';
+} from "react-native";
+import {
+    BorderRadius,
+    Colors,
+    GlobalStyles,
+    Spacing,
+    TypographyStyles,
+} from "../../constants/styles";
+import { useCart } from "../../src/context/CartContext";
 
 export default function ProductDetailScreen() {
   const router = useRouter();
@@ -18,17 +25,17 @@ export default function ProductDetailScreen() {
 
   // Mock product data (replace with real fetch later)
   const product = {
-    id: 'tent001',
-    name: 'Treckamp Camping Tent',
-    size: '200×150 cm',
+    id: "tent001",
+    name: "Treckamp Camping Tent",
+    size: "200×150 cm",
     price: 3950,
     rating: 4,
     reviews: 102,
     description:
-      'A picnic tent provides you with shelter from rain, wind, and harsh sunlight. It ensures that you and your companions can enjoy your meals and activities without worrying about getting wet or sunburned.',
-    delivery: 'Standard Delivery 5 Dec - 7 Dec',
-    colors: ['Black', 'White', 'Green', 'Red', 'Yellow'],
-    image: 'https://your-image-url.com/tent.jpg',
+      "A picnic tent provides you with shelter from rain, wind, and harsh sunlight. It ensures that you and your companions can enjoy your meals and activities without worrying about getting wet or sunburned.",
+    delivery: "Standard Delivery 5 Dec - 7 Dec",
+    colors: ["Black", "White", "Green", "Red", "Yellow"],
+    image: "https://your-image-url.com/tent.jpg",
   };
 
   const [quantity, setQuantity] = useState(1);
@@ -59,7 +66,8 @@ export default function ProductDetailScreen() {
       <Text style={styles.size}>Size: {product.size}</Text>
       <Text style={styles.price}>Rs. {product.price}</Text>
       <Text style={styles.rating}>
-        {'★'.repeat(product.rating)}{'☆'.repeat(5 - product.rating)} ({product.reviews} Reviews)
+        {"★".repeat(product.rating)}
+        {"☆".repeat(5 - product.rating)} ({product.reviews} Reviews)
       </Text>
 
       {/* Description */}
@@ -89,7 +97,9 @@ export default function ProductDetailScreen() {
       {/* Quantity */}
       <Text style={styles.sectionTitle}>Quantity</Text>
       <View style={styles.qtyRow}>
-        <TouchableOpacity onPress={() => setQuantity(Math.max(1, quantity - 1))}>
+        <TouchableOpacity
+          onPress={() => setQuantity(Math.max(1, quantity - 1))}
+        >
           <Ionicons name="remove-circle-outline" size={24} color="#007AFF" />
         </TouchableOpacity>
         <Text style={styles.qty}>{quantity}</Text>
@@ -107,36 +117,70 @@ export default function ProductDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
-  backBtn: { marginBottom: 10 },
-  image: { width: '100%', height: 220, borderRadius: 12, marginBottom: 16 },
-  name: { fontSize: 20, fontWeight: '700', marginBottom: 4 },
-  size: { fontSize: 14, color: '#555', marginBottom: 4 },
-  price: { fontSize: 18, fontWeight: '700', color: '#007AFF', marginBottom: 4 },
-  rating: { fontSize: 14, color: '#888', marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', marginTop: 20, marginBottom: 6 },
-  description: { fontSize: 14, color: '#444' },
-  delivery: { fontSize: 14, color: '#444' },
-  colorRow: { flexDirection: 'row', gap: 10, marginVertical: 10 },
+  container: {
+    ...GlobalStyles.screenContainer,
+    backgroundColor: Colors.neutral.white,
+    padding: Spacing.md,
+  },
+  backBtn: { marginBottom: Spacing.sm },
+  image: {
+    width: "100%",
+    height: 220,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.md,
+  },
+  name: { ...TypographyStyles.h2, marginBottom: Spacing.xs },
+  size: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.xs,
+  },
+  price: {
+    ...TypographyStyles.h3,
+    color: Colors.primary,
+    marginBottom: Spacing.xs,
+  },
+  rating: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.md,
+  },
+  sectionTitle: {
+    ...TypographyStyles.h4,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
+  },
+  description: { fontSize: 14, color: Colors.text.secondary },
+  delivery: { fontSize: 14, color: Colors.text.secondary },
+  colorRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginVertical: Spacing.md,
+  },
   colorCircle: {
     width: 30,
     height: 30,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: Colors.border.light,
   },
   colorSelected: {
-    borderColor: '#007AFF',
+    borderColor: Colors.primary,
     borderWidth: 2,
   },
-  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 10 },
-  qty: { fontSize: 16, fontWeight: '600' },
-  cartBtn: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
+  qtyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.lg,
+    marginVertical: Spacing.md,
   },
-  cartText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  qty: { fontSize: 16, fontWeight: "600" },
+  cartBtn: {
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+    marginTop: Spacing.lg,
+  },
+  cartText: { color: Colors.neutral.white, ...TypographyStyles.label },
 });

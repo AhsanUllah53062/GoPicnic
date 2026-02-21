@@ -1,28 +1,27 @@
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    ScrollView,
+    Text,
+    View,
 } from "react-native";
 import ProfileHeader from "../../components/profile/ProfileHeader";
 import ProfileMenuItem from "../../components/profile/ProfileMenuItem";
 import SettingsModal from "../../components/profile/SettingsModal";
 import TripCard from "../../components/profile/TripCard";
-import { auth } from "../../services/firebase";
 import { getUserProfile, UserProfile } from "../../services/profile";
 import { getUserTrips, Trip } from "../../services/trips";
 import { useUser } from "../../src/context/UserContext";
 
 export default function ProfileTab() {
   const router = useRouter();
-  const { user, setUser } = useUser();
+  const { user, setUser, logout, isAuthVerified } = useUser();
+  const { styles } = useThemedStyles();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -30,11 +29,15 @@ export default function ProfileTab() {
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    // Only load data after Firebase has verified the session
+    if (user && isAuthVerified) {
       loadProfile();
       loadTrips();
+    } else if (!isAuthVerified) {
+      // Still loading auth, keep loading spinner
+      setLoading(true);
     }
-  }, [user]);
+  }, [user, isAuthVerified]);
 
   const loadProfile = async () => {
     if (!user) return;
@@ -102,9 +105,24 @@ export default function ProfileTab() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-      setUser(null);
-      router.replace("/(auth)/welcome");
+      Alert.alert("Logout", "Are you sure you want to logout?", [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace("/(auth)/welcome");
+            } catch (error) {
+              Alert.alert("Error", "Failed to logout");
+            }
+          },
+        },
+      ]);
     } catch (error) {
       Alert.alert("Error", "Failed to logout");
     }
@@ -289,85 +307,3 @@ export default function ProfileTab() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F9FAFB",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F9FAFB",
-    padding: 40,
-  },
-  errorText: {
-    marginTop: 16,
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#EF4444",
-  },
-  section: {
-    marginTop: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 12,
-    paddingHorizontal: 16,
-  },
-  tripsList: {
-    paddingHorizontal: 16,
-  },
-  menuCard: {
-    marginHorizontal: 16,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  statsCard: {
-    marginHorizontal: 16,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    gap: 16,
-  },
-  statRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  statIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#F3F4F6",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  statContent: {
-    flex: 1,
-  },
-  statLabel: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111827",
-  },
-});

@@ -1,11 +1,19 @@
+import {
+    GlobalStyles,
+    InputStyles,
+    TypographyStyles,
+} from "@/constants/componentStyles";
+import { Spacing } from "@/constants/styles";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Text, TextInput, View } from "react-native";
 import CustomButton from "../../components/common/CustomButton";
 
 export default function CreateNewPassword() {
   const router = useRouter();
+  const { colors } = useThemedStyles();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -34,16 +42,18 @@ export default function CreateNewPassword() {
       <MaterialIcons
         name="arrow-back"
         size={24}
-        color="black"
+        color={colors.text.primary}
         style={styles.backIcon}
         onPress={() => router.back()}
       />
 
       {/* Heading */}
-      <Text style={styles.title}>Create new password</Text>
+      <Text style={[styles.title, { color: colors.text.primary }]}>
+        Create new password
+      </Text>
 
       {/* Subtitle */}
-      <Text style={styles.subtitle}>
+      <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
         Your new password must be unique from those previously used.
       </Text>
 
@@ -97,50 +107,41 @@ export default function CreateNewPassword() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 30,
-    paddingTop: 60,
+    ...GlobalStyles.screenContainer,
+    paddingHorizontal: Spacing.gutter,
+    paddingTop: Spacing.xxl,
   },
   backIcon: {
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
   },
   title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    marginBottom: 15,
-    color: "#000",
+    ...TypographyStyles.h2,
+    marginBottom: Spacing.md,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 30,
+    ...TypographyStyles.body,
+    marginBottom: Spacing.xl,
     lineHeight: 22,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    padding: 12,
+    ...InputStyles.baseInput,
     fontSize: 16,
-    color: "#000",
   },
   passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    marginTop: 16,
-    paddingRight: 10,
+    ...InputStyles.baseInput,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    marginTop: Spacing.md,
+    paddingRight: Spacing.md,
   },
   eyeIcon: {
-    marginLeft: 8,
+    marginLeft: Spacing.md,
   },
   buttonWrapper: {
-    marginTop: 30,
-    alignItems: "center",
+    marginTop: Spacing.xl,
+    alignItems: "center" as const,
   },
-});
+};

@@ -1,46 +1,67 @@
-import { useLocalSearchParams } from 'expo-router';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemedStyles } from "@/hooks/useThemedStyles";
+import { useLocalSearchParams } from "expo-router";
+import {
+    Image,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View
+} from "react-native";
+import {
+    BorderRadius,
+    GlobalStyles,
+    Shadows,
+    Spacing,
+    TypographyStyles,
+} from "../../constants/styles";
 
 export default function TripDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { colors } = useThemedStyles();
 
   // 🔹 Mock trip data (later replace with DB fetch)
   const mockTrips: Record<string, any> = {
-    '1': {
-      title: 'Trip to Faisal Masjid',
-      dates: 'Oct 6–11',
+    "1": {
+      title: "Trip to Faisal Masjid",
+      dates: "Oct 6–11",
       places: [
-        { name: 'Faisal Masjid', image: require('../../assets/faisal.jpg') },
-        { name: 'Daman-e-Koh', image: require('../../assets/hanna.jpg') },
-        { name: 'Lok Virsa Museum', image: require('../../assets/sea.jpg') },
+        { name: "Faisal Masjid", image: require("../../assets/faisal.jpg") },
+        { name: "Daman-e-Koh", image: require("../../assets/hanna.jpg") },
+        { name: "Lok Virsa Museum", image: require("../../assets/sea.jpg") },
       ],
-      expenses: 'PKR 12,000',
-      notes: 'Family trip with sightseeing and photography.',
+      expenses: "PKR 12,000",
+      notes: "Family trip with sightseeing and photography.",
     },
-    '2': {
-      title: 'Trip to Badshahi Masjid',
-      dates: 'Jan 1, 2023',
+    "2": {
+      title: "Trip to Badshahi Masjid",
+      dates: "Jan 1, 2023",
       places: [
-        { name: 'Badshahi Masjid', image: require('../../assets/faisal_inside.jpg') },
-        { name: 'Lahore Fort', image: require('../../assets/faisal_night.jpg') },
-        { name: 'Food Street', image: require('../../assets/faisal.jpg') },
+        {
+          name: "Badshahi Masjid",
+          image: require("../../assets/faisal_inside.jpg"),
+        },
+        {
+          name: "Lahore Fort",
+          image: require("../../assets/faisal_night.jpg"),
+        },
+        { name: "Food Street", image: require("../../assets/faisal.jpg") },
       ],
-      expenses: 'PKR 8,500',
-      notes: 'Explored Lahore’s heritage and food culture.',
+      expenses: "PKR 8,500",
+      notes: "Explored Lahore’s heritage and food culture.",
     },
-    '3': {
-      title: 'Trip to Minar Pakistan',
-      dates: 'Dec 11, 2023',
+    "3": {
+      title: "Trip to Minar Pakistan",
+      dates: "Dec 11, 2023",
       places: [
-        { name: 'Minar-e-Pakistan', image: require('../../assets/sea.jpg') },
-        { name: 'Iqbal Park', image: require('../../assets/hanna.jpg') },
+        { name: "Minar-e-Pakistan", image: require("../../assets/sea.jpg") },
+        { name: "Iqbal Park", image: require("../../assets/hanna.jpg") },
       ],
-      expenses: 'PKR 5,000',
-      notes: 'Short trip with friends.',
+      expenses: "PKR 5,000",
+      notes: "Short trip with friends.",
     },
   };
 
-  const trip = mockTrips[id ?? ''] || null;
+  const trip = mockTrips[id ?? ""] || null;
 
   if (!trip) {
     return (
@@ -49,6 +70,54 @@ export default function TripDetails() {
       </View>
     );
   }
+
+  const styles = {
+    container: {
+      ...GlobalStyles.screenContainer,
+      backgroundColor: colors.neutral[50],
+      padding: Spacing.md,
+    },
+    title: { ...TypographyStyles.h2, marginBottom: Spacing.xs },
+    subtitle: {
+      ...TypographyStyles.body,
+      color: colors.text.secondary,
+      marginBottom: Spacing.lg,
+    },
+    sectionHeading: {
+      ...TypographyStyles.h4,
+      marginTop: Spacing.lg,
+      marginBottom: Spacing.md,
+    },
+    placeCard: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      backgroundColor: colors.neutral.white,
+      borderRadius: BorderRadius.md,
+      marginBottom: Spacing.md,
+      padding: Spacing.sm,
+      ...Shadows.sm,
+    },
+    placeImage: {
+      width: 60,
+      height: 60,
+      borderRadius: BorderRadius.md,
+      marginRight: Spacing.md,
+    },
+    placeName: { ...TypographyStyles.body, color: colors.text.primary },
+    detailText: {
+      ...TypographyStyles.body,
+      color: colors.text.secondary,
+      marginBottom: Spacing.md,
+    },
+    backBtn: {
+      marginTop: Spacing.xl,
+      backgroundColor: colors.primary,
+      paddingVertical: Spacing.md,
+      borderRadius: BorderRadius.md,
+      alignItems: "center" as const,
+    },
+    backText: { color: colors.neutral.white, ...TypographyStyles.label },
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -79,34 +148,3 @@ export default function TripDetails() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f7fa', padding: 20 },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 6 },
-  subtitle: { fontSize: 16, color: '#666', marginBottom: 20 },
-  sectionHeading: { fontSize: 18, fontWeight: '600', marginTop: 20, marginBottom: 10 },
-  placeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 12,
-    padding: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  placeImage: { width: 60, height: 60, borderRadius: 8, marginRight: 12 },
-  placeName: { fontSize: 15, fontWeight: '500', color: '#000' },
-  detailText: { fontSize: 14, color: '#444', marginBottom: 10 },
-  backBtn: {
-    marginTop: 30,
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  backText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});

@@ -1,3 +1,5 @@
+import { CardStyles, TypographyStyles } from "@/constants/componentStyles";
+import { Colors, Spacing } from "@/constants/styles";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Expense } from "../../services/expenses";
@@ -45,7 +47,7 @@ export default function ExpenseCard({ expense, onDelete, onEdit }: Props) {
         <MaterialIcons
           name={expense.categoryIcon as any}
           size={24}
-          color="#6366F1"
+          color={Colors.primary}
         />
       </View>
 
@@ -97,20 +99,17 @@ export default function ExpenseCard({ expense, onDelete, onEdit }: Props) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: "#FAFAFA",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
+    ...CardStyles.flatCard,
+    marginBottom: Spacing.component,
     alignItems: "flex-start",
-    gap: 12,
-    borderWidth: 1,
-    borderColor: "#F3F4F6",
+    gap: Spacing.md,
   },
   iconContainer: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: Colors.primaryLight,
+    opacity: 0.15,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -124,26 +123,26 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   category: {
-    fontSize: 15,
+    ...TypographyStyles.label,
+    color: Colors.text.primary,
     fontWeight: "600",
-    color: "#111827",
     flex: 1,
   },
   amount: {
-    fontSize: 15,
+    ...TypographyStyles.label,
+    color: Colors.error,
     fontWeight: "700",
-    color: "#EF4444",
   },
   description: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginBottom: 8,
+    ...TypographyStyles.bodySmall,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.md,
   },
   footer: {
     flexDirection: "row",
     alignItems: "center",
     flexWrap: "wrap",
-    gap: 8,
+    gap: Spacing.sm,
   },
   detail: {
     flexDirection: "row",
@@ -152,14 +151,14 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: Colors.text.tertiary,
     fontWeight: "500",
   },
   dot: {
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: "#D1D5DB",
+    backgroundColor: Colors.neutral.gray200,
   },
   deleteButton: {
     padding: 4,

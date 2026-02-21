@@ -1,11 +1,13 @@
+import { ButtonStyles, TypographyStyles } from "@/constants/componentStyles";
+import { BorderRadius, Colors, Spacing } from "@/constants/styles";
 import { useRouter } from "expo-router";
 import {
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Image,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 type PlaceCardProps = {
@@ -66,40 +68,36 @@ export default function PlaceCard({
 const styles = StyleSheet.create({
   card: {
     width: 160,
-    marginRight: 15,
+    marginRight: Spacing.lg,
   },
   image: {
     width: "100%",
     height: 100,
-    borderRadius: 8,
-    backgroundColor: "#eee", // fallback background
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.neutral.gray100,
   },
   name: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 6,
-    color: "#000",
+    ...TypographyStyles.label,
+    marginTop: Spacing.sm,
+    color: Colors.text.primary,
   },
   details: {
-    fontSize: 12,
-    color: "#666",
-    marginTop: 2,
+    ...TypographyStyles.caption,
+    color: Colors.text.secondary,
+    marginTop: Spacing.xs,
   },
   rating: {
-    fontSize: 12,
-    color: "#333",
-    marginTop: 2,
+    ...TypographyStyles.caption,
+    color: Colors.text.primary,
+    marginTop: Spacing.xs,
   },
   planBtn: {
-    marginTop: 8,
-    backgroundColor: "#000",
-    paddingVertical: 6,
-    borderRadius: 6,
-    alignItems: "center",
+    marginTop: Spacing.md,
+    ...ButtonStyles.primary,
+    paddingVertical: Spacing.sm,
   },
   planBtnText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "600",
+    ...TypographyStyles.label,
+    color: Colors.neutral.white,
   },
 });

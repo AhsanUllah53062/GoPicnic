@@ -1,6 +1,8 @@
 // app/(tabs)/carpool.tsx
 import CarpoolDetailsModal from "@/components/carpool/CarpoolDetailsModal";
 import CarpoolDiscoveryCard from "@/components/carpool/CarpoolDiscoveryCard";
+import { TypographyStyles } from "@/constants/componentStyles";
+import { Colors, Spacing } from "@/constants/styles";
 import { Carpool } from "@/services/carpool";
 import { getAllAvailableCarpools } from "@/services/carpoolDiscovery";
 import { createConversation } from "@/services/messages";
@@ -24,7 +26,7 @@ type FilterType = "soonest" | "cheapest" | "seats";
 
 export default function CarpoolDiscoveryScreen() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isAuthVerified } = useUser();
 
   const [carpools, setCarpools] = useState<Carpool[]>([]);
   const [filteredCarpools, setFilteredCarpools] = useState<Carpool[]>([]);
@@ -35,8 +37,11 @@ export default function CarpoolDiscoveryScreen() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   useEffect(() => {
-    loadCarpools();
-  }, []);
+    // Only load carpools after Firebase auth is verified
+    if (isAuthVerified) {
+      loadCarpools();
+    }
+  }, [isAuthVerified]);
 
   useEffect(() => {
     applySorting(activeFilter);
@@ -289,60 +294,60 @@ export default function CarpoolDiscoveryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: Colors.neutral[50],
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === "ios" ? 60 : 20,
-    paddingBottom: 16,
-    backgroundColor: "#fff",
+    paddingHorizontal: Spacing.md,
+    paddingTop: Platform.OS === "ios" ? Spacing.xxl : Spacing.md,
+    paddingBottom: Spacing.md,
+    backgroundColor: Colors.neutral.white,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: Colors.border.light,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 4,
+    ...TypographyStyles.h3,
+    color: Colors.text.primary,
+    marginBottom: Spacing.xs,
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: "#6B7280",
+    ...TypographyStyles.caption,
+    color: Colors.text.secondary,
   },
   headerButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: Colors.primaryLight,
+    opacity: 0.15,
     justifyContent: "center",
     alignItems: "center",
   },
   filterContainer: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    backgroundColor: Colors.neutral.white,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: Colors.border.light,
   },
   filterLabel: {
-    fontSize: 13,
+    ...TypographyStyles.caption,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.sm,
     fontWeight: "600",
-    color: "#6B7280",
-    marginBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   filterPills: {
     flexDirection: "row",
-    gap: 8,
+    gap: Spacing.xs,
   },
   filterPill: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
+    paddingHorizontal: Spacing.md,
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: "#EEF2FF",

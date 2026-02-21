@@ -12,6 +12,12 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import {
+    Colors,
+    InputStyles,
+    Spacing,
+    TypographyStyles
+} from "../../constants/styles";
 import { getUserProfile, updateUserProfile } from "../../services/profile";
 import { useUser } from "../../src/context/UserContext";
 
@@ -177,72 +183,62 @@ export default function PersonalInfoPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: Colors.neutral[50],
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
+    backgroundColor: Colors.neutral[50],
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    paddingHorizontal: Spacing.md,
     paddingTop: Platform.OS === "ios" ? 60 : 20,
-    paddingBottom: 16,
-    backgroundColor: "#fff",
+    paddingBottom: Spacing.md,
+    backgroundColor: Colors.neutral.white,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: Colors.border.light,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#111827",
+    ...TypographyStyles.h4,
+    color: Colors.text.primary,
   },
   saveText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#6366F1",
+    ...TypographyStyles.label,
+    color: Colors.primary,
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: Spacing.md,
   },
   inputGroup: {
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: 8,
+    ...TypographyStyles.label,
+    color: Colors.text.primary,
+    marginBottom: Spacing.sm,
   },
   input: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: "#111827",
+    ...InputStyles.baseInput,
   },
   textArea: {
     minHeight: 100,
     textAlignVertical: "top",
   },
   disabledInput: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: Colors.neutral[100],
   },
   disabledText: {
-    fontSize: 15,
-    color: "#6B7280",
+    ...TypographyStyles.body,
+    color: Colors.text.secondary,
   },
   helperText: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginTop: 6,
+    ...TypographyStyles.caption,
+    color: Colors.text.secondary,
+    marginTop: Spacing.xs,
   },
 });

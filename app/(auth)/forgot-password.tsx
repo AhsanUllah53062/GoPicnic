@@ -1,20 +1,60 @@
+import {
+    GlobalStyles,
+    InputStyles,
+    TypographyStyles,
+} from "@/constants/componentStyles";
+import { Spacing } from "@/constants/styles";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import CustomButton from "../../components/common/Button"; // ✅ use consistent path
-import { resetPassword } from "../../services/auth"; // ✅ import Firebase service
+import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import CustomButton from "../../components/common/Button";
+import { resetPassword } from "../../services/auth";
 
 export default function ForgotPassword() {
   const router = useRouter();
+  const { colors } = useThemedStyles();
   const [email, setEmail] = useState<string>("");
+
+  const styles = {
+    container: {
+      flex: 1,
+      ...GlobalStyles.screenContainer,
+      paddingHorizontal: Spacing.gutter,
+      paddingTop: Spacing.xxl,
+    },
+    backIcon: {
+      marginBottom: Spacing.lg,
+    },
+    title: {
+      ...TypographyStyles.h2,
+      marginBottom: Spacing.md,
+    },
+    subtitle: {
+      ...TypographyStyles.body,
+      marginBottom: Spacing.xl,
+      lineHeight: 22,
+    },
+    input: {
+      ...InputStyles.baseInput,
+      fontSize: 16,
+    },
+    buttonWrapper: {
+      marginTop: Spacing.xl,
+      alignItems: "center" as const,
+    },
+    footer: {
+      marginTop: Spacing.xxl,
+      flexDirection: "row" as const,
+      justifyContent: "center" as const,
+    },
+    loginText: {
+      ...TypographyStyles.label,
+      color: colors.primary,
+      fontWeight: "600" as const,
+    },
+  };
 
   const handleSendCode = async () => {
     if (!email) {
@@ -45,7 +85,7 @@ export default function ForgotPassword() {
       <MaterialIcons
         name="arrow-back"
         size={24}
-        color="black"
+        color={colors.text.primary}
         style={styles.backIcon}
         onPress={() => router.back()}
       />
@@ -60,7 +100,7 @@ export default function ForgotPassword() {
 
       {/* Email Input */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: colors.text.primary }]}
         placeholder="Enter your email"
         placeholderTextColor="#666"
         keyboardType="email-address"
@@ -75,7 +115,9 @@ export default function ForgotPassword() {
 
       {/* Footer: Remember password? Login */}
       <View style={styles.footer}>
-        <Text style={{ fontSize: 16, color: "#000" }}>Remember password? </Text>
+        <Text style={{ fontSize: 16, color: colors.text.primary }}>
+          Remember password?{" "}
+        </Text>
         <Pressable onPress={() => router.push("/login")}>
           <Text style={styles.loginText}>Login</Text>
         </Pressable>
@@ -83,49 +125,3 @@ export default function ForgotPassword() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 30,
-    paddingTop: 60,
-  },
-  backIcon: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    marginBottom: 15,
-    color: "#000",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 30,
-    lineHeight: 22,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    padding: 12,
-    fontSize: 16,
-    color: "#000",
-  },
-  buttonWrapper: {
-    marginTop: 30,
-    alignItems: "center",
-  },
-  footer: {
-    marginTop: 40,
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  loginText: {
-    fontSize: 16,
-    color: "#007bff",
-    fontWeight: "500",
-  },
-});

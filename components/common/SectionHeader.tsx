@@ -1,5 +1,6 @@
-// components/SectionHeader.tsx
-import { StyleSheet, Text } from 'react-native';
+import { TypographyStyles } from "@/constants/componentStyles";
+import { Spacing } from "@/constants/styles";
+import { StyleSheet, Text } from "react-native";
 
 type SectionHeaderProps = {
   title: string;
@@ -10,5 +11,8 @@ export default function SectionHeader({ title }: SectionHeaderProps) {
 }
 
 const styles = StyleSheet.create({
-  header: { fontSize: 20, fontWeight: 'bold', marginVertical: 15 },
+  header: {
+    ...TypographyStyles.h4,
+    marginVertical: Spacing.md,
+  },
 });

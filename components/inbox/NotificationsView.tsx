@@ -23,7 +23,7 @@ import NotificationCard from "./NotificationCard";
 
 export default function NotificationsView() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isAuthVerified } = useUser();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filteredNotifications, setFilteredNotifications] = useState<
@@ -40,10 +40,11 @@ export default function NotificationsView() {
   >(new Set());
 
   useEffect(() => {
-    if (user) {
+    // Only load notifications after Firebase auth is verified
+    if (user && isAuthVerified) {
       loadNotifications();
     }
-  }, [user]);
+  }, [user, isAuthVerified]);
 
   useEffect(() => {
     // Filter notifications by category

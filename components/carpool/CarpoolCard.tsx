@@ -1,12 +1,17 @@
 //components/carpool/CarpoolCard.tsx
+import {
+    CardStyles,
+    TypographyStyles
+} from "@/constants/componentStyles";
+import { BorderRadius, Colors, Spacing } from "@/constants/styles";
 import { MaterialIcons } from "@expo/vector-icons";
 import {
-  Alert,
-  Share,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Share,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { Carpool } from "../../services/carpool";
 
@@ -72,7 +77,11 @@ Contact: ${carpool.contactNumber}`;
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.carIcon}>
-          <MaterialIcons name="directions-car" size={24} color="#6366F1" />
+          <MaterialIcons
+            name="directions-car"
+            size={24}
+            color={Colors.primary}
+          />
         </View>
         <View style={styles.headerInfo}>
           <Text style={styles.driverName}>{carpool.driverName}</Text>
@@ -89,13 +98,15 @@ Contact: ${carpool.contactNumber}`;
         <View
           style={[
             styles.statusBadge,
-            { backgroundColor: isFull ? "#FEE2E2" : "#D1FAE5" },
+            {
+              backgroundColor: isFull ? Colors.errorLight : Colors.successLight,
+            },
           ]}
         >
           <Text
             style={[
               styles.statusText,
-              { color: isFull ? "#DC2626" : "#059669" },
+              { color: isFull ? Colors.error : Colors.success },
             ]}
           >
             {isFull ? "Full" : "Available"}
@@ -225,29 +236,21 @@ Contact: ${carpool.contactNumber}`;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    ...CardStyles.elevatedCard,
+    marginBottom: Spacing.md,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
-    gap: 12,
+    marginBottom: Spacing.md,
+    gap: Spacing.md,
   },
   carIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: Colors.primaryLight,
+    opacity: 0.15,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -255,54 +258,54 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   driverName: {
-    fontSize: 16,
+    ...TypographyStyles.label,
+    color: Colors.text.primary,
     fontWeight: "600",
-    color: "#111827",
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   carInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: Spacing.sm,
   },
   carModel: {
-    fontSize: 13,
-    color: "#6B7280",
+    ...TypographyStyles.caption,
+    color: Colors.text.secondary,
     fontWeight: "500",
   },
   dot: {
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: "#D1D5DB",
+    backgroundColor: Colors.neutral.gray300,
   },
   carColor: {
-    fontSize: 13,
-    color: "#6B7280",
+    ...TypographyStyles.caption,
+    color: Colors.text.secondary,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.lg,
   },
   statusText: {
-    fontSize: 12,
+    ...TypographyStyles.caption,
     fontWeight: "600",
   },
   detailsGrid: {
-    gap: 12,
-    marginBottom: 16,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
   },
   detailRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 12,
+    gap: Spacing.md,
   },
   detailIcon: {
     width: 32,
     height: 32,
-    borderRadius: 8,
-    backgroundColor: "#F9FAFB",
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.neutral.gray50,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -310,61 +313,61 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   detailLabel: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginBottom: 2,
+    ...TypographyStyles.caption,
+    color: Colors.text.tertiary,
+    marginBottom: Spacing.xs,
     fontWeight: "500",
   },
   detailValue: {
-    fontSize: 14,
-    color: "#374151",
+    ...TypographyStyles.label,
+    color: Colors.text.primary,
     fontWeight: "500",
   },
   preferencesContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: "#FEF3C7",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+    gap: Spacing.md,
+    backgroundColor: Colors.warningLight,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
   },
   preferencesText: {
     flex: 1,
-    fontSize: 13,
-    color: "#92400E",
+    ...TypographyStyles.caption,
+    color: Colors.warning,
   },
   notesContainer: {
-    backgroundColor: "#F9FAFB",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+    backgroundColor: Colors.neutral.gray50,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
   },
   notesText: {
-    fontSize: 13,
-    color: "#6B7280",
+    ...TypographyStyles.caption,
+    color: Colors.text.secondary,
     lineHeight: 20,
   },
   actions: {
     flexDirection: "row",
-    gap: 12,
+    gap: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
-    paddingTop: 16,
+    borderTopColor: Colors.border.light,
+    paddingTop: Spacing.md,
   },
   actionButton: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: "#F9FAFB",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.neutral.gray50,
   },
   actionButtonText: {
-    fontSize: 14,
+    ...TypographyStyles.label,
     fontWeight: "600",
-    color: "#6366F1",
+    color: Colors.primary,
   },
 });

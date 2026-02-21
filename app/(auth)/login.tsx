@@ -1,14 +1,14 @@
+import {
+    GlobalStyles,
+    InputStyles,
+    TypographyStyles,
+} from "@/constants/componentStyles";
+import { Spacing } from "@/constants/styles";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, Pressable, Text, TextInput, View } from "react-native";
 import Button from "../../components/common/Button";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { useAuth } from "../../hooks/useAuth";
@@ -16,9 +16,77 @@ import { useAuth } from "../../hooks/useAuth";
 export default function Login() {
   const router = useRouter();
   const { login, loading } = useAuth();
+  const { colors } = useThemedStyles();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const styles = {
+    container: {
+      ...GlobalStyles.screenContainer,
+      paddingHorizontal: Spacing.gutter,
+      paddingTop: Spacing.xxl,
+    },
+    backButton: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      marginBottom: Spacing.lg,
+    },
+    backText: {
+      ...TypographyStyles.label,
+      color: colors.text.primary,
+      marginLeft: Spacing.xs,
+    },
+    title: {
+      ...TypographyStyles.h2,
+      color: colors.text.primary,
+      marginBottom: Spacing.sm,
+    },
+    subtitle: {
+      ...TypographyStyles.body,
+      color: colors.text.secondary,
+      marginBottom: Spacing.xl,
+    },
+    input: {
+      ...InputStyles.baseInput,
+      marginTop: Spacing.md,
+      color: colors.text.primary,
+    },
+    passwordContainer: {
+      ...InputStyles.baseInput,
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      marginTop: Spacing.md,
+      paddingRight: Spacing.md,
+    },
+    eyeIcon: {
+      marginLeft: Spacing.md,
+    },
+    forgotPassword: {
+      alignSelf: "flex-end" as const,
+      color: colors.primary,
+      ...TypographyStyles.label,
+      marginTop: Spacing.md,
+    },
+    buttonWrapper: {
+      marginTop: Spacing.xl,
+      alignItems: "center" as const,
+    },
+    signupContainer: {
+      marginTop: Spacing.xxl,
+      flexDirection: "row" as const,
+      justifyContent: "center" as const,
+    },
+    signupText: {
+      ...TypographyStyles.label,
+      color: colors.text.primary,
+    },
+    signupLink: {
+      ...TypographyStyles.label,
+      color: colors.primary,
+      fontWeight: "600" as const,
+    },
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -37,7 +105,11 @@ export default function Login() {
     <View style={styles.container}>
       {/* Back Button */}
       <Pressable style={styles.backButton} onPress={() => router.back()}>
-        <MaterialIcons name="arrow-back-ios" size={20} color="#000" />
+        <MaterialIcons
+          name="arrow-back-ios"
+          size={20}
+          color={colors.text.primary}
+        />
         <Text style={styles.backText}>Back</Text>
       </Pressable>
 
@@ -98,78 +170,3 @@ export default function Login() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 30,
-    paddingTop: 60,
-  },
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  backText: {
-    fontSize: 14,
-    color: "#000",
-    marginLeft: 4,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#000",
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 30,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 16,
-    fontSize: 16,
-    color: "#000",
-  },
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    marginTop: 16,
-    paddingRight: 10,
-  },
-  eyeIcon: {
-    marginLeft: 8,
-  },
-  forgotPassword: {
-    alignSelf: "flex-end",
-    color: "#007AFF",
-    fontSize: 14,
-    marginTop: 10,
-  },
-  buttonWrapper: {
-    marginTop: 30,
-    alignItems: "center",
-  },
-  signupContainer: {
-    marginTop: 40,
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  signupText: {
-    fontSize: 16,
-    color: "#000",
-  },
-  signupLink: {
-    fontSize: 16,
-    color: "#007AFF",
-    fontWeight: "500",
-  },
-});

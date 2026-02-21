@@ -113,6 +113,12 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated(); 
       allow write: if isOwner(userId);
+
+      // User Preferences subcollection
+      match /preferences/{prefId} {
+        allow read: if isOwner(userId);
+        allow create, update, delete: if isOwner(userId);
+      }
     }
 
     match /userProfiles/{userId} {

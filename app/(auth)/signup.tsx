@@ -1,15 +1,21 @@
+import {
+    GlobalStyles,
+    InputStyles,
+    TypographyStyles,
+} from "@/constants/componentStyles";
+import { Spacing } from "@/constants/styles";
+import { useThemedStyles } from "@/hooks/useThemedStyles";
 import { MaterialIcons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import Button from "../../components/common/Button";
 import CustomPicker from "../../components/common/CustomPicker";
@@ -18,6 +24,7 @@ import { registerUser } from "../../services/auth";
 
 export default function Signup() {
   const router = useRouter();
+  const { colors } = useThemedStyles();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -64,7 +71,7 @@ export default function Signup() {
       <MaterialIcons
         name="arrow-back"
         size={24}
-        color="#000"
+        color={colors.text.primary}
         style={styles.backIcon}
         onPress={() => router.back()}
       />
@@ -157,34 +164,27 @@ export default function Signup() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     flexGrow: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 30,
-    paddingBottom: 40,
+    ...GlobalStyles.screenContainer,
+    paddingHorizontal: Spacing.gutter,
+    paddingBottom: Spacing.xl,
   },
   backIcon: {
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    marginVertical: 20,
-    color: "#000",
+    ...TypographyStyles.h2,
+    marginVertical: Spacing.lg,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    padding: 12,
-    marginTop: 16,
-    fontSize: 16,
-    color: "#000",
+    ...InputStyles.baseInput,
+    marginTop: Spacing.md,
   },
   buttonWrapper: {
-    marginTop: 30,
-    alignItems: "center",
+    marginTop: Spacing.xl,
+    alignItems: "center" as const,
   },
-});
+};

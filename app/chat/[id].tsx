@@ -2,10 +2,10 @@
 import MessageBubble from "@/components/inbox/MessageBubble";
 import TripInfoBar from "@/components/inbox/TripInfoBar";
 import {
-  markMessagesAsRead,
-  sendMessage,
-  subscribeToMessages,
-  updateTypingIndicator,
+    markMessagesAsRead,
+    sendMessage,
+    subscribeToMessages,
+    updateTypingIndicator,
 } from "@/services/messages";
 import { useUser } from "@/src/context/UserContext";
 import { Message } from "@/types/inbox-types";
@@ -16,17 +16,23 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+    BorderRadius,
+    Colors,
+    Spacing,
+    TypographyStyles
+} from "../../constants/styles";
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -300,13 +306,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111827",
+    ...TypographyStyles.h4,
+    color: Colors.text.primary,
   },
   headerSubtitle: {
-    fontSize: 13,
-    color: "#6B7280",
+    ...TypographyStyles.caption,
+    color: Colors.text.secondary,
   },
   content: {
     flex: 1,
@@ -317,51 +322,51 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#6B7280",
+    marginTop: Spacing.lg,
+    ...TypographyStyles.body,
+    color: Colors.text.secondary,
   },
   messagesList: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "flex-end",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.neutral.white,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-    gap: 8,
+    borderTopColor: Colors.border.light,
+    gap: Spacing.sm,
   },
   attachButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: Colors.primary + "15",
     justifyContent: "center",
     alignItems: "center",
   },
   input: {
     flex: 1,
     maxHeight: 100,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 20,
-    fontSize: 15,
-    color: "#111827",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.neutral[100],
+    borderRadius: BorderRadius.full,
+    ...TypographyStyles.body,
+    color: Colors.text.primary,
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#6366F1",
+    backgroundColor: Colors.primary,
     justifyContent: "center",
     alignItems: "center",
   },
   sendButtonDisabled: {
-    backgroundColor: "#D1D5DB",
+    backgroundColor: Colors.border.light,
   },
 });

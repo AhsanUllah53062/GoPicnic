@@ -1,9 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
-import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { Alert } from "react-native";
 import app, { auth } from "./firebase";
-
-const storage = getStorage(app);
 
 /**
  * Request camera permissions
@@ -96,7 +93,8 @@ export const pickImage = async (): Promise<string | null> => {
 };
 
 /**
- * Upload image to Firebase Storage
+ * Upload image to Firebase Storage using REST API
+ * Bypasses Firebase SDK Blob limitation in React Native
  */
 export const uploadImage = async (
   uri: string,
@@ -112,38 +110,86 @@ export const uploadImage = async (
     }
     console.log("✅ User authenticated:", currentUser.uid);
 
+    // Get auth token
+    const idToken = await currentUser.getIdToken();
+    console.log("✅ Got ID token for upload");
+
+    // Validate path
+    if (!path || path.trim() === "") {
+      throw new Error("Invalid storage path: cannot be empty");
+    }
+
     // Fetch the image
     console.log("📥 Fetching image from URI:", uri);
     const response = await fetch(uri);
+    console.log("📥 Fetch response status:", response.status);
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.statusText}`);
+      throw new Error(`Failed to fetch image: HTTP ${response.status}`);
     }
-    const blob = await response.blob();
-    console.log("✅ Image fetched, blob size:", blob.size, "bytes");
 
-    // Create storage reference
-    const storageRef = ref(storage, path);
-    console.log("📍 Storage reference created for path:", path);
-    console.log("📍 Storage bucket:", storage.app.options.storageBucket);
+    // Get the blob directly from the response (works in React Native)
+    console.log("📥 Getting blob from response...");
+    const imageBlob = await response.blob();
+    console.log("✅ Image blob obtained, size:", imageBlob.size);
 
-    // Upload the blob
-    console.log("📤 Starting upload...");
-    const uploadResult = await uploadBytes(storageRef, blob, {
-      contentType: "image/jpeg",
+    // Validate size
+    if (imageBlob.size === 0) {
+      throw new Error(
+        "Image blob is empty. Try taking or selecting a different photo.",
+      );
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (imageBlob.size > maxSize) {
+      console.warn(
+        "⚠️ Image is large:",
+        (imageBlob.size / 1024 / 1024).toFixed(2),
+        "MB",
+      );
+    }
+
+    // Upload using Firebase Storage REST API
+    const bucket = app.options.storageBucket;
+    const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${encodeURIComponent(path)}`;
+
+    console.log("📤 Uploading via REST API...");
+    console.log("📍 Upload URL:", uploadUrl);
+    console.log("📤 Image size:", imageBlob.size, "bytes");
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "image/jpeg",
+      },
+      body: imageBlob,
     });
-    console.log("✅ Blob uploaded, metadata:", uploadResult.metadata);
 
-    // Get download URL
-    const downloadURL = await getDownloadURL(storageRef);
-    console.log("✅ Download URL obtained:", downloadURL);
+    console.log("📤 Upload response status:", uploadResponse.status);
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      console.error("❌ Upload response error:", errorText);
+      throw new Error(
+        `Upload failed: HTTP ${uploadResponse.status} - ${errorText}`,
+      );
+    }
+
+    // Get download URL from REST API
+    // Profile photos are publicly readable per storage rules, so no token needed
+    // Add cache-busting parameter to ensure fresh image loads
+    const downloadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(path)}?alt=media&cb=${Date.now()}`;
+    console.log("✅ Download URL:", downloadUrl);
     console.log("✅ Image uploaded successfully");
-    return downloadURL;
+
+    return downloadUrl;
   } catch (error: any) {
-    console.error("❌ Error uploading image:", error);
-    console.error("❌ Error code:", error.code);
+    console.error("❌ Error in uploadImage:", error);
     console.error("❌ Error message:", error.message);
-    console.error("❌ Full error object:", JSON.stringify(error));
-    throw new Error(`Failed to upload image: ${error.message}`);
+    throw new Error(
+      `Failed to upload image: ${error.message || "Unknown error"}`,
+    );
   }
 };
 
@@ -154,6 +200,12 @@ export const uploadProfilePhoto = async (
   userId: string,
   uri: string,
 ): Promise<string> => {
-  const path = `users/${userId}/profile.jpg`;
+  if (!userId || userId.trim() === "") {
+    throw new Error("Invalid userId: cannot be empty");
+  }
+
+  // Use a timestamp to avoid caching issues and ensure unique filenames
+  const timestamp = Date.now();
+  const path = `users/${userId}/profile/${timestamp}.jpg`;
   return uploadImage(uri, path);
 };
